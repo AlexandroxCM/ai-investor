@@ -1,0 +1,6 @@
+# ALL risk limits live here. The Risk Manager is pure code and reads only this file.
+max_position_pct: 0.25      # no single position > 25% of portfolio value
+min_cash_pct: 0.10          # always keep >= 10% cash
+max_open_positions: 8
+max_drawdown_halt_pct: 0.20 # kill switch: halt all trading past 20% drawdown
+min_confidence: 0.60        # reject proposals below this confidence

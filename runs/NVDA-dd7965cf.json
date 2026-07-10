@@ -1,0 +1,99 @@
+{
+  "run_id": "NVDA-dd7965cf",
+  "started_at": "2026-07-10T02:22:46.409732Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "NVDA",
+      "score": 0.419,
+      "confidence": 0.7,
+      "summary": "MA10=167.63 vs MA30=164.19 (+2.10%)",
+      "evidence": [
+        "fast_ma=167.6320",
+        "slow_ma=164.1883"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "NVDA",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[NEWS] NVDA beats expectations"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "NVDA",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "NVDA",
+    "signal": "buy",
+    "quantity": 1.143,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [
+    {
+      "id": "obj-1",
+      "text": "Valuation already prices in the good news."
+    },
+    {
+      "id": "obj-2",
+      "text": "Momentum can reverse on macro shifts."
+    }
+  ],
+  "rebuttals": [
+    {
+      "objection_id": "obj-1",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    },
+    {
+      "objection_id": "obj-2",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    }
+  ],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 1.143,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": {
+    "ticker": "NVDA",
+    "signal": "buy",
+    "quantity": 1.143,
+    "status": "filled",
+    "fill_price": 175.06749,
+    "filled_at": "2026-07-10T02:22:46.412396Z"
+  },
+  "portfolio_after": {
+    "cash": 799.9,
+    "positions": [
+      {
+        "ticker": "NVDA",
+        "quantity": 1.143,
+        "avg_cost": 175.06749
+      }
+    ],
+    "equity": 999.9
+  },
+  "benchmark_value": 1000.0,
+  "notes": []
+}

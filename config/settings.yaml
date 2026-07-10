@@ -1,0 +1,30 @@
+# Which plugin implements each interface. Swapping = editing one line.
+plugins:
+  llm: fake            # fake | groq | gemini | ollama
+  market_data: fake    # fake | yfinance
+  news: fake           # fake | rss | edgar | composite (edgar+rss, deduped — recommended live)
+  broker: fake         # fake | alpaca_paper | alpaca_live
+  notifier: console    # console | discord (needs DISCORD_WEBHOOK_URL)
+  macro: fake          # fake | fred (needs FRED_API_KEY)
+
+universe:
+  # Phase 1 fixed list; screener module replaces this in a later phase.
+  watchlist: [NVDA, AAPL, MSFT, VOO, QQQ]
+
+run:
+  starting_cash: 1000.0
+  audit_dir: runs
+  slippage_bps: 5      # paper-fill haircut, always against you
+
+benchmark:
+  ticker: VOO          # every deposit shadow-buys this — the scoreboard
+
+# Optional plugin-specific config
+llm:
+  ollama_model: qwen2.5:14b
+
+news:
+  # SEC blocks anonymous requests — put your real contact here before using edgar/composite
+  edgar_user_agent: "ai-investor personal-project YOUR_EMAIL_HERE@example.com"
+  feeds:   # {ticker} is substituted per query
+    - "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US"

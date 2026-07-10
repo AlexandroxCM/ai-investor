@@ -1,0 +1,109 @@
+{
+  "run_id": "QQQ-d9498515",
+  "started_at": "2026-07-10T02:22:46.423734Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "QQQ",
+      "score": 0.671,
+      "confidence": 0.7,
+      "summary": "MA10=229.53 vs MA30=222.08 (+3.35%)",
+      "evidence": [
+        "fast_ma=229.5320",
+        "slow_ma=222.0817"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "QQQ",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[NEWS] QQQ beats expectations"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "QQQ",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "QQQ",
+    "signal": "buy",
+    "quantity": 0.8461,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [
+    {
+      "id": "obj-1",
+      "text": "Valuation already prices in the good news."
+    },
+    {
+      "id": "obj-2",
+      "text": "Momentum can reverse on macro shifts."
+    }
+  ],
+  "rebuttals": [
+    {
+      "objection_id": "obj-1",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    },
+    {
+      "objection_id": "obj-2",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    }
+  ],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.8461,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": {
+    "ticker": "QQQ",
+    "signal": "buy",
+    "quantity": 0.8461,
+    "status": "filled",
+    "fill_price": 236.488185,
+    "filled_at": "2026-07-10T02:22:46.424806Z"
+  },
+  "portfolio_after": {
+    "cash": 399.69,
+    "positions": [
+      {
+        "ticker": "NVDA",
+        "quantity": 1.143,
+        "avg_cost": 175.06749
+      },
+      {
+        "ticker": "MSFT",
+        "quantity": 0.5683,
+        "avg_cost": 352.125975
+      },
+      {
+        "ticker": "QQQ",
+        "quantity": 0.8461,
+        "avg_cost": 236.488185
+      }
+    ],
+    "equity": 999.7
+  },
+  "benchmark_value": 1000.0,
+  "notes": []
+}
