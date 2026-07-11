@@ -1,0 +1,104 @@
+{
+  "run_id": "VOO-cf2b8bd2",
+  "started_at": "2026-07-10T02:31:28.211095Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "VOO",
+      "score": -0.007,
+      "confidence": 0.7,
+      "summary": "MA10=683.58 vs MA30=683.80 (-0.03%)",
+      "evidence": [
+        "fast_ma=683.5778",
+        "slow_ma=683.8042"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "VOO",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[NEWS] VOO beats expectations"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "VOO",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "VOO",
+    "signal": "buy",
+    "quantity": 0.2896,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [
+    {
+      "id": "obj-1",
+      "text": "Valuation already prices in the good news."
+    },
+    {
+      "id": "obj-2",
+      "text": "Momentum can reverse on macro shifts."
+    }
+  ],
+  "rebuttals": [
+    {
+      "objection_id": "obj-1",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    },
+    {
+      "objection_id": "obj-2",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    }
+  ],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.2896,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": {
+    "ticker": "VOO",
+    "signal": "buy",
+    "quantity": 0.2896,
+    "status": "filled",
+    "fill_price": 691.035347442627,
+    "filled_at": "2026-07-10T02:31:28.492688Z"
+  },
+  "portfolio_after": {
+    "cash": 599.77,
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "quantity": 0.6325,
+        "avg_cost": 316.3781112213135
+      },
+      {
+        "ticker": "VOO",
+        "quantity": 0.2896,
+        "avg_cost": 691.035347442627
+      }
+    ],
+    "equity": 999.8
+  },
+  "benchmark_value": 1000.0,
+  "notes": []
+}

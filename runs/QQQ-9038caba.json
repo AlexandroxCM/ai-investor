@@ -1,0 +1,113 @@
+{
+  "run_id": "QQQ-9038caba",
+  "started_at": "2026-07-11T02:53:56.390109Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "QQQ",
+      "score": -0.108,
+      "confidence": 0.7,
+      "summary": "MA10=719.73 vs MA30=723.63 (-0.54%)",
+      "evidence": [
+        "fast_ma=719.7250",
+        "slow_ma=723.6265"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "QQQ",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[NEWS] S&P 500, Nasdaq End Week Higher Following Strong SK Hynix Debut — META, SKHVY, CRCL, BA, DAL In Focus",
+        "[NEWS] Week’s Best: SpaceX Created an IPO Road Map",
+        "[NEWS] Stock Indexes Settle Higher as Geopolitical Risks Ease"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "QQQ",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "QQQ",
+    "signal": "buy",
+    "quantity": 0.2757,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [
+    {
+      "id": "obj-1",
+      "text": "Valuation already prices in the good news."
+    },
+    {
+      "id": "obj-2",
+      "text": "Momentum can reverse on macro shifts."
+    }
+  ],
+  "rebuttals": [
+    {
+      "objection_id": "obj-1",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    },
+    {
+      "objection_id": "obj-2",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    }
+  ],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.2757,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": {
+    "ticker": "QQQ",
+    "signal": "buy",
+    "quantity": 0.2757,
+    "status": "filled",
+    "fill_price": 725.8727647705077,
+    "filled_at": "2026-07-11T02:53:57.176556Z"
+  },
+  "portfolio_after": {
+    "cash": 399.7,
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "quantity": 0.6343,
+        "avg_cost": 315.47766732788085
+      },
+      {
+        "ticker": "VOO",
+        "quantity": 0.2882,
+        "avg_cost": 694.2069153442383
+      },
+      {
+        "ticker": "QQQ",
+        "quantity": 0.2757,
+        "avg_cost": 725.8727647705077
+      }
+    ],
+    "equity": 999.7
+  },
+  "benchmark_value": 1000.0,
+  "notes": []
+}

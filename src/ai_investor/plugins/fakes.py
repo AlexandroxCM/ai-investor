@@ -66,6 +66,9 @@ class FakeBroker(Broker):
         self.slippage_bps = slippage_bps  # always against you: buy higher, sell lower
         self.positions: dict[str, Position] = {}
 
+    def deposit(self, amount: float) -> None:
+        self.cash += amount
+
     def submit(self, order: Order) -> Order:
         mid = self.data.last_price(order.ticker)
         slip = self.slippage_bps / 10_000

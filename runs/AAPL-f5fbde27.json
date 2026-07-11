@@ -1,0 +1,74 @@
+{
+  "run_id": "AAPL-f5fbde27",
+  "started_at": "2026-07-11T03:21:16.135375Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "AAPL",
+      "score": 0.128,
+      "confidence": 0.7,
+      "summary": "MA10=302.61 vs MA30=300.69 (+0.64%)",
+      "evidence": [
+        "fast_ma=302.6140",
+        "slow_ma=300.6880"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "AAPL",
+      "score": 0.2,
+      "confidence": 0.8,
+      "summary": "Recent 8-K filings for AAPL indicate routine corporate activities, including financial reporting and officer appointments, with no major negative or positive announcements.",
+      "evidence": [
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "AAPL",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "AAPL",
+    "signal": "hold",
+    "quantity": 0.0,
+    "confidence": 0.7,
+    "thesis": "Based on the combined score of +0.29, AAPL's current market position appears stable, with mildly positive technical indicators, neutral news sentiment, and a supportive macroeconomic environment, suggesting a hold strategy is prudent. As the technical, news, and macro factors are not indicating a strong buy or sell signal, holding AAPL is a reasonable approach, allowing investors to maintain their position and monitor future developments that may impact the stock's performance.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [],
+  "rebuttals": [],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.0,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": null,
+  "portfolio_after": {
+    "cash": 1000.0,
+    "positions": [],
+    "equity": 1000.0
+  },
+  "benchmark_value": 1000.0,
+  "notes": [
+    "no execution: verdict=approve, rules=[]"
+  ]
+}

@@ -1,0 +1,108 @@
+{
+  "run_id": "VOO-74d57f1f",
+  "started_at": "2026-07-11T02:53:55.673111Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "VOO",
+      "score": 0.046,
+      "confidence": 0.7,
+      "summary": "MA10=685.59 vs MA30=684.00 (+0.23%)",
+      "evidence": [
+        "fast_ma=685.5890",
+        "slow_ma=684.0010"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "VOO",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[NEWS] I’d Put $25,000 in These 2 ETFs Before the Next Earnings Season",
+        "[NEWS] VOO Just Crossed $1 Trillion. Here’s the Hidden Risk Nobody’s Pricing In",
+        "[NEWS] 9 Stocks Are Down But Not Out — Analysts Predict Big Comebacks",
+        "[NEWS] If You’re Retiring in the 2030s, These 3 ETFs Beat a Target Date Fund",
+        "[NEWS] The S&P 500 Is Up 5% This Year. This ‘Cash Cow’ Fund Is Up 9%"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "VOO",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "VOO",
+    "signal": "buy",
+    "quantity": 0.2882,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [
+    {
+      "id": "obj-1",
+      "text": "Valuation already prices in the good news."
+    },
+    {
+      "id": "obj-2",
+      "text": "Momentum can reverse on macro shifts."
+    }
+  ],
+  "rebuttals": [
+    {
+      "objection_id": "obj-1",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    },
+    {
+      "objection_id": "obj-2",
+      "response": "Fake thesis: indicators align modestly positive. Position sized conservatively."
+    }
+  ],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.2882,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": {
+    "ticker": "VOO",
+    "signal": "buy",
+    "quantity": 0.2882,
+    "status": "filled",
+    "fill_price": 694.2069153442383,
+    "filled_at": "2026-07-11T02:53:56.288248Z"
+  },
+  "portfolio_after": {
+    "cash": 599.82,
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "quantity": 0.6343,
+        "avg_cost": 315.47766732788085
+      },
+      {
+        "ticker": "VOO",
+        "quantity": 0.2882,
+        "avg_cost": 694.2069153442383
+      }
+    ],
+    "equity": 999.8
+  },
+  "benchmark_value": 1000.0,
+  "notes": []
+}

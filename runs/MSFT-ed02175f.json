@@ -1,0 +1,74 @@
+{
+  "run_id": "MSFT-ed02175f",
+  "started_at": "2026-07-11T03:00:38.940438Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "MSFT",
+      "score": -0.709,
+      "confidence": 0.7,
+      "summary": "MA10=381.77 vs MA30=395.80 (-3.54%)",
+      "evidence": [
+        "fast_ma=381.7710",
+        "slow_ma=395.7963"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "MSFT",
+      "score": 0.0,
+      "confidence": 0.8,
+      "summary": "Microsoft (MSFT) has filed multiple 8-K reports recently, primarily related to changes in officers and financial condition, but no significant positive or negative news has been disclosed.",
+      "evidence": [
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report",
+        "[FILING] [8-K filing] 8-K  - Current report"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "MSFT",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "MSFT",
+    "signal": "hold",
+    "quantity": 0.0,
+    "confidence": 0.7,
+    "thesis": "Based on the combined score of -0.06, it is recommended to hold Microsoft (MSFT) as the negative technical indicators, such as the 3.54% gap between the MA10 and MA30, are offset by the positive macroeconomic factors, including a normal yield curve, contained inflation, and a stable unemployment rate. Despite the lack of significant news, the overall outlook suggests that MSFT's current position is relatively stable, and investors may want to maintain their holdings rather than buying or selling, as the stock's prospects are neither strongly bullish nor bearish at this time.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [],
+  "rebuttals": [],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.0,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": null,
+  "portfolio_after": {
+    "cash": 1000.0,
+    "positions": [],
+    "equity": 1000.0
+  },
+  "benchmark_value": 1000.0,
+  "notes": [
+    "no execution: verdict=approve, rules=[]"
+  ]
+}

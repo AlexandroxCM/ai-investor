@@ -1,0 +1,70 @@
+{
+  "run_id": "NVDA-e8a681d7",
+  "started_at": "2026-07-10T02:31:26.511076Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "NVDA",
+      "score": -0.79,
+      "confidence": 0.7,
+      "summary": "MA10=197.51 vs MA30=205.63 (-3.95%)",
+      "evidence": [
+        "fast_ma=197.5120",
+        "slow_ma=205.6333"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "NVDA",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[NEWS] NVDA beats expectations"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "NVDA",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "NVDA",
+    "signal": "hold",
+    "quantity": 0.0,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [],
+  "rebuttals": [],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.0,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": null,
+  "portfolio_after": {
+    "cash": 1000.0,
+    "positions": [],
+    "equity": 1000.0
+  },
+  "benchmark_value": 1000.0,
+  "notes": [
+    "no execution: verdict=approve, rules=[]"
+  ]
+}

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import yaml
 
-from ai_investor.core.benchmark import ShadowBenchmark
+from ai_investor.core.benchmark import PersistentBenchmark, ShadowBenchmark
 from ai_investor.plugins.fakes import (FakeBroker, FakeLLM, FakeMacro,
                                        FakeMarketData, FakeNews)
 from ai_investor.plugins.notifiers import ConsoleNotifier, DiscordNotifier
@@ -22,19 +22,29 @@ class Registry:
         self.news = self._make_news(p["news"])
         self.macro = self._make_macro(p.get("macro", "fake"))
 
-        broker_impls = {
-            "fake": lambda: FakeBroker(self.market_data,
-                                       self.settings["run"]["starting_cash"],
-                                       self.settings["run"].get("slippage_bps", 5)),
-        }
-        self.broker = broker_impls[p["broker"]]()
+        run_cfg = self.settings["run"]
+        bench_ticker = self.settings.get("benchmark", {}).get("ticker", "VOO")
+        slippage = run_cfg.get("slippage_bps", 5)
+
+        if p["broker"] == "paper":
+            from ai_investor.persistence.state import StateStore
+            from ai_investor.plugins.broker.paper import PaperBroker
+            store = StateStore(Path(run_cfg["audit_dir"]) / "state.db")
+            self.broker = PaperBroker(self.market_data, store, slippage)
+            self.benchmark = PersistentBenchmark(self.market_data, store, bench_ticker)
+            if store.get("seeded") is None:  # first ever run: fund both sides once
+                self.broker.deposit(run_cfg["starting_cash"])
+                self.benchmark.deposit(run_cfg["starting_cash"])
+                store.set("seeded", "1")
+        elif p["broker"] == "fake":
+            self.broker = FakeBroker(self.market_data, run_cfg["starting_cash"], slippage)
+            self.benchmark = ShadowBenchmark(self.market_data, bench_ticker)
+            self.benchmark.deposit(run_cfg["starting_cash"])
+        else:
+            raise ValueError(f"unknown broker plugin: {p['broker']}")
 
         notifier_impls = {"console": ConsoleNotifier, "discord": DiscordNotifier}
         self.notifier = notifier_impls[p.get("notifier", "console")]()
-
-        self.benchmark = ShadowBenchmark(
-            self.market_data, self.settings.get("benchmark", {}).get("ticker", "VOO"))
-        self.benchmark.deposit(self.settings["run"]["starting_cash"])
 
     def _make_llm(self, name: str):
         if name == "fake":

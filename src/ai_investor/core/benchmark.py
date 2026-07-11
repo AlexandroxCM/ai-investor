@@ -35,3 +35,26 @@ class ShadowBenchmark:
         if self.deposited == 0:
             return 0.0
         return round((self.value() / self.deposited - 1) * 100, 2)
+
+
+class PersistentBenchmark(ShadowBenchmark):
+    """ShadowBenchmark whose shares/deposits survive process restarts."""
+
+    def __init__(self, data, store, ticker: str = "VOO"):
+        super().__init__(data, ticker)
+        self.store = store
+        self.shares = float(store.get("bench_shares") or 0.0)
+        self.deposited = float(store.get("bench_deposited") or 0.0)
+
+    def _persist(self) -> None:
+        self.store.set("bench_shares", self.shares)
+        self.store.set("bench_deposited", self.deposited)
+
+    def deposit(self, amount: float) -> None:
+        super().deposit(amount)
+        self._persist()
+
+    def apply_dividends(self, period_days: int) -> float:
+        paid = super().apply_dividends(period_days)
+        self._persist()
+        return paid

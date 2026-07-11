@@ -1,0 +1,76 @@
+{
+  "run_id": "MSFT-4d7c2893",
+  "started_at": "2026-07-10T02:31:27.634323Z",
+  "reports": [
+    {
+      "agent": "technical",
+      "ticker": "MSFT",
+      "score": -0.916,
+      "confidence": 0.7,
+      "summary": "MA10=378.54 vs MA30=396.72 (-4.58%)",
+      "evidence": [
+        "fast_ma=378.5440",
+        "slow_ma=396.7153"
+      ]
+    },
+    {
+      "agent": "news",
+      "ticker": "MSFT",
+      "score": 0.5,
+      "confidence": 0.8,
+      "summary": "fake: mildly positive coverage",
+      "evidence": [
+        "[NEWS] MSFT beats expectations"
+      ]
+    },
+    {
+      "agent": "macro",
+      "ticker": "MSFT",
+      "score": 0.6,
+      "confidence": 0.6,
+      "summary": "yield curve normal (+0.55); inflation contained (2.3% YoY); unemployment stable (4.0%); Fed easing (4.50% -> 3.90%)",
+      "evidence": [
+        "yield curve normal (+0.55)",
+        "inflation contained (2.3% YoY)",
+        "unemployment stable (4.0%)",
+        "Fed easing (4.50% -> 3.90%)"
+      ]
+    }
+  ],
+  "proposal": {
+    "ticker": "MSFT",
+    "signal": "hold",
+    "quantity": 0.0,
+    "confidence": 0.7,
+    "thesis": "Fake thesis: indicators align modestly positive. Position sized conservatively.",
+    "cited_reports": [
+      "technical",
+      "news",
+      "macro"
+    ]
+  },
+  "objections": [],
+  "rebuttals": [],
+  "verdict": {
+    "action": "approve",
+    "approved_quantity": 0.0,
+    "rules_triggered": [],
+    "note": ""
+  },
+  "order": null,
+  "portfolio_after": {
+    "cash": 799.89,
+    "positions": [
+      {
+        "ticker": "AAPL",
+        "quantity": 0.6325,
+        "avg_cost": 316.3781112213135
+      }
+    ],
+    "equity": 999.9
+  },
+  "benchmark_value": 1000.0,
+  "notes": [
+    "no execution: verdict=approve, rules=[]"
+  ]
+}
