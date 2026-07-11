@@ -31,9 +31,12 @@ class RiskState:
 class RiskManager:
     name = "risk"
 
-    def __init__(self, rules_path: str | Path, state_path: str | Path = "runs/risk_state.json"):
+    def __init__(self, rules_path: str | Path, state_path: str | Path = "runs/risk_state.json",
+                 sector_of=None, price_of=None):
         self.rules = yaml.safe_load(Path(rules_path).read_text())
         self.state = RiskState(state_path)
+        self.sector_of = sector_of   # callable ticker -> sector
+        self.price_of = price_of     # callable ticker -> last price
 
     def _check_kill_switch(self, portfolio: PortfolioState) -> bool:
         """Update high-water mark; return True if trading must halt."""
@@ -71,17 +74,31 @@ class RiskManager:
             cost = proposal.quantity * last_price
             max_cost_position = self.rules["max_position_pct"] * portfolio.equity
             max_cost_cash = portfolio.cash - self.rules["min_cash_pct"] * portfolio.equity
-            allowed = max(0.0, min(max_cost_position, max_cost_cash))
+            limits = {"max_position_pct": max_cost_position,
+                      "min_cash_pct": max_cost_cash}
+
+            max_sector = self.rules.get("max_sector_pct")
+            if max_sector and self.sector_of and self.price_of:
+                sector = self.sector_of(proposal.ticker)
+                if sector not in ("ETF", "Unknown"):  # funds are already diversified
+                    exposure = sum(
+                        pos.quantity * self.price_of(pos.ticker)
+                        for pos in portfolio.positions
+                        if self.sector_of(pos.ticker) == sector)
+                    limits["max_sector_pct"] = max_sector * portfolio.equity - exposure
+
+            binding_rule = min(limits, key=limits.get)
+            allowed = max(0.0, limits[binding_rule])
 
             if cost > allowed and not triggered:
                 if allowed <= 0:
-                    triggered.append("min_cash_pct")
+                    triggered.append(binding_rule)
                 else:
                     return RiskVerdict(
                         action=RiskAction.RESIZE,
                         approved_quantity=round(allowed / last_price, 4),
-                        rules_triggered=["max_position_pct"],
-                        note=f"resized from {proposal.quantity} to fit limits")
+                        rules_triggered=[binding_rule],
+                        note=f"resized from {proposal.quantity} to fit {binding_rule}")
 
         if triggered:
             return RiskVerdict(action=RiskAction.REJECT, approved_quantity=0,

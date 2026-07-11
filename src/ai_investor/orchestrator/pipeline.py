@@ -30,7 +30,9 @@ class Pipeline:
         self.audit_dir = Path(registry.settings["run"]["audit_dir"])
         self.audit_dir.mkdir(exist_ok=True)
         self.risk = RiskManager(risk_rules_path,
-                                state_path=self.audit_dir / "risk_state.json")
+                                state_path=self.audit_dir / "risk_state.json",
+                                sector_of=registry.market_data.sector,
+                                price_of=registry.market_data.last_price)
         self.store = AuditStore(self.audit_dir / "audit.db")
 
     def run_cycle(self, ticker: str, budget: float) -> RunRecord:

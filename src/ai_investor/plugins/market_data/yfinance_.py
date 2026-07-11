@@ -39,6 +39,21 @@ class YFinanceData(MarketDataProvider):
             raise RuntimeError(f"no price data for {ticker}")
         return bars[-1].close
 
+    def sector(self, ticker: str) -> str:
+        from ai_investor.screener.sectors import SECTORS
+        if ticker in SECTORS:
+            return SECTORS[ticker]
+        if not hasattr(self, "_sector_cache"):
+            self._sector_cache: dict[str, str] = {}
+        if ticker not in self._sector_cache:
+            try:
+                info = self._ticker(ticker).info or {}
+                self._sector_cache[ticker] = info.get("sector") or (
+                    "ETF" if info.get("quoteType") == "ETF" else "Unknown")
+            except Exception:
+                self._sector_cache[ticker] = "Unknown"
+        return self._sector_cache[ticker]
+
     def dividend_yield(self, ticker: str) -> float:
         info = self._ticker(ticker).info or {}
         y = info.get("dividendYield") or 0.0

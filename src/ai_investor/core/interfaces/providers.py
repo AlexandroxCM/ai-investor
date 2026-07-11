@@ -23,6 +23,11 @@ class MarketDataProvider(ABC):
     def dividend_yield(self, ticker: str) -> float:
         """Trailing annual dividend yield as a fraction (0.013 = 1.3%)."""
 
+    def sector(self, ticker: str) -> str:
+        """GICS-style sector; 'ETF' for funds; 'Unknown' if undetermined."""
+        from ai_investor.screener.sectors import SECTORS
+        return SECTORS.get(ticker, "Unknown")
+
 
 class MacroProvider(ABC):
     @abstractmethod
