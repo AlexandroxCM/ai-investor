@@ -1,4 +1,5 @@
-"""Run one full pipeline cycle per watchlist ticker, entirely on fakes.
+"""Run one full pipeline cycle. Universe comes from the watchlist or,
+in screener mode, from scanning S&P 100 + top ETFs for the best candidates.
 Usage: python scripts/run_cycle.py"""
 import sys
 from pathlib import Path
@@ -11,13 +12,33 @@ from ai_investor.orchestrator.registry import Registry
 ROOT = Path(__file__).parent.parent
 
 
+def pick_universe(reg: Registry) -> list[str]:
+    cfg = reg.settings["universe"]
+    if cfg.get("mode", "watchlist") != "screener":
+        return cfg["watchlist"]
+    from ai_investor.screener.screener import Screener
+    from ai_investor.screener.universe import DEFAULT_UNIVERSE
+    sc = cfg.get("screener", {})
+    held = [p.ticker for p in reg.broker.portfolio().positions]
+    screener = Screener(reg.market_data, DEFAULT_UNIVERSE,
+                        top_n=sc.get("top_n", 12),
+                        min_price=sc.get("min_price", 5.0),
+                        min_dollar_volume=sc.get("min_dollar_volume", 5_000_000))
+    print(f"Screening {len(DEFAULT_UNIVERSE)} symbols for top {sc.get('top_n', 12)}...")
+    picks = screener.top_candidates(always_include=held)
+    print(f"Candidates: {', '.join(picks)}")
+    return picks
+
+
 def main() -> None:
     reg = Registry(ROOT / "config" / "settings.yaml")
     pipe = Pipeline(reg, ROOT / "config" / "risk_rules.yaml")
-    budget_per_ticker = reg.settings["run"]["starting_cash"] * 0.2
+    tickers = pick_universe(reg)
+    equity = reg.broker.portfolio().equity
+    budget_per_ticker = max(equity * 0.10, 1.0)  # risk manager still has final say
 
     trades = []
-    for ticker in reg.settings["universe"]["watchlist"]:
+    for ticker in tickers:
         rec = pipe.run_cycle(ticker, budget=budget_per_ticker)
         v, o = rec.verdict, rec.order
         print(f"[{ticker:5}] proposal={rec.proposal.signal.value:4} "

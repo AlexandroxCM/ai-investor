@@ -3,6 +3,7 @@ OpenRouter free tiers — they all speak the same API shape. Ollama for local.""
 from __future__ import annotations
 
 import os
+import time
 
 import requests
 
@@ -25,12 +26,16 @@ PRESETS = {
 class OpenAICompatLLM(LLMProvider):
     def __init__(self, preset: str = "groq", model: str | None = None,
                  base_url: str | None = None, api_key: str | None = None,
-                 temperature: float = 0.0):
+                 temperature: float = 0.0, min_interval: float = 2.5,
+                 max_retries: int = 5):
         cfg = PRESETS.get(preset, {})
         self.base_url = base_url or cfg.get("base_url", "")
         self.model = model or cfg.get("model", "")
         self.api_key = api_key or os.environ.get(cfg.get("key_env", ""), "")
         self.temperature = temperature
+        self.min_interval = min_interval   # pace calls under free-tier RPM limits
+        self.max_retries = max_retries
+        self._last_call = 0.0
         if not self.api_key:
             raise RuntimeError(
                 f"Missing API key — set {cfg.get('key_env', 'the provider key')} in .env")
@@ -38,14 +43,27 @@ class OpenAICompatLLM(LLMProvider):
     def complete(self, prompt: str, system: str = "") -> str:
         messages = ([{"role": "system", "content": system}] if system else []) + [
             {"role": "user", "content": prompt}]
-        resp = requests.post(
-            f"{self.base_url}/chat/completions",
-            headers={"Authorization": f"Bearer {self.api_key}"},
-            json={"model": self.model, "messages": messages,
-                  "temperature": self.temperature},
-            timeout=60)
-        resp.raise_for_status()
-        return resp.json()["choices"][0]["message"]["content"]
+        payload = {"model": self.model, "messages": messages,
+                   "temperature": self.temperature}
+        for attempt in range(self.max_retries):
+            gap = self.min_interval - (time.monotonic() - self._last_call)
+            if gap > 0:
+                time.sleep(gap)
+            resp = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers={"Authorization": f"Bearer {self.api_key}"},
+                json=payload, timeout=60)
+            self._last_call = time.monotonic()
+            if resp.status_code == 429:
+                wait = float(resp.headers.get("retry-after", 2 ** attempt * 3))
+                print(f"[llm] rate limited, waiting {wait:.0f}s "
+                      f"(attempt {attempt + 1}/{self.max_retries})")
+                time.sleep(wait + 0.5)
+                continue
+            resp.raise_for_status()
+            return resp.json()["choices"][0]["message"]["content"]
+        raise RuntimeError("LLM rate-limit retries exhausted — try again later "
+                           "or lower screener top_n")
 
 
 class OllamaLLM(LLMProvider):

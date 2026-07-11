@@ -8,8 +8,12 @@ plugins:
   macro: fake          # fake | fred (needs FRED_API_KEY)
 
 universe:
-  # Phase 1 fixed list; screener module replaces this in a later phase.
+  mode: screener         # watchlist | screener
   watchlist: [NVDA, AAPL, MSFT, VOO, QQQ]
+  screener:
+    top_n: 12
+    min_price: 5.0
+    min_dollar_volume: 5000000
 
 run:
   starting_cash: 1000.0

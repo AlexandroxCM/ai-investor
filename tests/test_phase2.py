@@ -86,3 +86,37 @@ def test_yfinance_plugin_maps_history_to_bars():
     assert len(bars) == 2
     assert bars[-1].close == 102.5
     assert data.last_price("NVDA") == 102.5
+
+
+def test_llm_retries_on_rate_limit(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    from ai_investor.plugins.llm import providers as prov
+    llm = prov.OpenAICompatLLM(preset="groq", min_interval=0)
+
+    limited = MagicMock()
+    limited.status_code = 429
+    limited.headers = {"retry-after": "0"}
+    ok = MagicMock()
+    ok.status_code = 200
+    ok.raise_for_status = MagicMock()
+    ok.json.return_value = {"choices": [{"message": {"content": "recovered"}}]}
+
+    with patch.object(prov.requests, "post", side_effect=[limited, ok]):
+        with patch.object(prov.time, "sleep"):
+            assert llm.complete("hi") == "recovered"
+
+
+def test_llm_gives_up_after_max_retries(monkeypatch):
+    monkeypatch.setenv("GROQ_API_KEY", "test-key")
+    from ai_investor.plugins.llm import providers as prov
+    llm = prov.OpenAICompatLLM(preset="groq", min_interval=0, max_retries=2)
+    limited = MagicMock()
+    limited.status_code = 429
+    limited.headers = {}
+    with patch.object(prov.requests, "post", return_value=limited):
+        with patch.object(prov.time, "sleep"):
+            try:
+                llm.complete("hi")
+                assert False, "should have raised"
+            except RuntimeError as e:
+                assert "retries exhausted" in str(e)
