@@ -5,7 +5,7 @@ plugins:
   news: composite           # fake | rss | edgar | composite (edgar+rss, deduped — recommended live)
   broker: paper         # fake | alpaca_paper | alpaca_live
   notifier: console    # console | discord (needs DISCORD_WEBHOOK_URL)
-  macro: fake          # fake | fred (needs FRED_API_KEY)
+  macro: fred          # fake | fred (needs FRED_API_KEY)
 
 universe:
   mode: screener         # watchlist | screener
