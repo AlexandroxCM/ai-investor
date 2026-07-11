@@ -1,8 +1,11 @@
 """Free news via RSS. Default feed is Yahoo Finance per-ticker; add feeds
-(PR Newswire, Reuters, sector blogs) in settings.yaml without code changes."""
+(PR Newswire, Reuters, sector blogs) in settings.yaml without code changes.
+Feeds are fetched with an explicit timeout — a slow feed skips, never hangs."""
 from __future__ import annotations
 
 from datetime import datetime, timezone
+
+import requests
 
 from ai_investor.core.interfaces.providers import NewsProvider
 from ai_investor.core.models import Article
@@ -10,6 +13,7 @@ from ai_investor.core.models import Article
 DEFAULT_FEEDS = [
     "https://feeds.finance.yahoo.com/rss/2.0/headline?s={ticker}&region=US&lang=en-US",
 ]
+TIMEOUT = 15
 
 
 class RSSNews(NewsProvider):
@@ -21,7 +25,15 @@ class RSSNews(NewsProvider):
     def get_articles(self, ticker: str, limit: int = 5) -> list[Article]:
         articles: list[Article] = []
         for template in self.feeds:
-            parsed = self._fp.parse(template.format(ticker=ticker))
+            url = template.format(ticker=ticker)
+            try:
+                resp = requests.get(url, timeout=TIMEOUT,
+                                    headers={"User-Agent": "ai-investor-rss"})
+                resp.raise_for_status()
+            except requests.RequestException as e:
+                print(f"[news:rss] feed timed out or failed, skipping: {e}")
+                continue
+            parsed = self._fp.parse(resp.content)
             for entry in parsed.entries[:limit]:
                 published = datetime.now(timezone.utc)
                 if getattr(entry, "published_parsed", None):

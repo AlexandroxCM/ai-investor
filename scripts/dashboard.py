@@ -262,5 +262,8 @@ def index():
 
 
 if __name__ == "__main__":
+    import threading
+    import webbrowser
+    threading.Timer(1.2, lambda: webbrowser.open("http://localhost:8017")).start()
     print("Audit desk: http://localhost:8017  (Ctrl+C to stop)")
     uvicorn.run(app, host="127.0.0.1", port=8017, log_level="warning")
