@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 from ai_investor.core.benchmark import PersistentBenchmark, ShadowBenchmark
+from ai_investor.core.env import load_env
 from ai_investor.plugins.fakes import (FakeBroker, FakeLLM, FakeMacro,
                                        FakeMarketData, FakeNews)
 from ai_investor.plugins.notifiers import ConsoleNotifier, DiscordNotifier
@@ -14,7 +15,9 @@ from ai_investor.plugins.notifiers import ConsoleNotifier, DiscordNotifier
 
 class Registry:
     def __init__(self, settings_path: str | Path):
-        self.settings = yaml.safe_load(Path(settings_path).read_text())
+        settings_path = Path(settings_path).resolve()
+        load_env(settings_path.parent.parent)  # .env lives at project root
+        self.settings = yaml.safe_load(settings_path.read_text())
         p = self.settings["plugins"]
 
         self.llm = self._make_llm(p["llm"])
