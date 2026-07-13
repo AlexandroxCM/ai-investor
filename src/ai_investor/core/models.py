@@ -81,6 +81,7 @@ class Order(BaseModel):
     ticker: str
     signal: Signal
     quantity: float
+    client_order_id: str | None = None  # idempotency key — prevents double-orders on retry
     status: OrderStatus = OrderStatus.SUBMITTED
     fill_price: float | None = None
     filled_at: datetime | None = None

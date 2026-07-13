@@ -56,7 +56,8 @@ class Pipeline:
                 and rec.proposal.signal != Signal.HOLD
                 and rec.verdict.approved_quantity > 0):
             order = Order(ticker=ticker, signal=rec.proposal.signal,
-                          quantity=rec.verdict.approved_quantity)
+                          quantity=rec.verdict.approved_quantity,
+                          client_order_id=rec.run_id)
             rec.order = self.reg.broker.submit(order)
         else:
             rec.notes.append(f"no execution: verdict={rec.verdict.action.value}, "

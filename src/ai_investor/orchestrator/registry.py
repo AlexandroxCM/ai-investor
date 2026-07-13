@@ -39,6 +39,16 @@ class Registry:
                 self.broker.deposit(run_cfg["starting_cash"])
                 self.benchmark.deposit(run_cfg["starting_cash"])
                 store.set("seeded", "1")
+        elif p["broker"] == "alpaca_paper":
+            from ai_investor.persistence.state import StateStore
+            from ai_investor.plugins.broker.alpaca import AlpacaBroker
+            self.broker = AlpacaBroker()
+            store = StateStore(Path(run_cfg["audit_dir"]) / "state.db")
+            self.benchmark = PersistentBenchmark(self.market_data, store, bench_ticker)
+            if store.get("alpaca_bench_seeded") is None:
+                # benchmark mirrors whatever Alpaca's paper account starts with
+                self.benchmark.deposit(self.broker.portfolio().equity)
+                store.set("alpaca_bench_seeded", "1")
         elif p["broker"] == "fake":
             self.broker = FakeBroker(self.market_data, run_cfg["starting_cash"], slippage)
             self.benchmark = ShadowBenchmark(self.market_data, bench_ticker)
@@ -88,11 +98,14 @@ class Registry:
             from ai_investor.plugins.news.edgar import EdgarFilings
             return EdgarFilings(news_cfg.get("edgar_user_agent", ""))
         if name == "composite":
+            import os
             from ai_investor.plugins.news.composite import CompositeNews
             from ai_investor.plugins.news.edgar import EdgarFilings
             from ai_investor.plugins.news.rss import RSSNews
-            return CompositeNews([
-                EdgarFilings(news_cfg.get("edgar_user_agent", "")),
-                RSSNews(news_cfg.get("feeds")),
-            ])
+            providers = [EdgarFilings(news_cfg.get("edgar_user_agent", "")),
+                         RSSNews(news_cfg.get("feeds"))]
+            if os.environ.get("ALPACA_API_KEY"):  # newswire upgrades in automatically
+                from ai_investor.plugins.news.alpaca_news import AlpacaNews
+                providers.insert(1, AlpacaNews())
+            return CompositeNews(providers)
         raise ValueError(f"unknown news plugin: {name}")
