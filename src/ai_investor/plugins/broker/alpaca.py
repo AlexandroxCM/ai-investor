@@ -72,6 +72,14 @@ class AlpacaBroker(Broker):
             print(f"[alpaca] {order.ticker} order accepted, will fill at next open")
         return order
 
+    def open_orders(self) -> list[Order]:
+        raw = self._get("/v2/orders?status=open&limit=200")
+        return [Order(ticker=o["symbol"],
+                      signal=Signal.BUY if o["side"] == "buy" else Signal.SELL,
+                      quantity=float(o["qty"]),
+                      client_order_id=o.get("client_order_id"))
+                for o in raw]
+
     def portfolio(self) -> PortfolioState:
         account = self._get("/v2/account")
         raw_positions = self._get("/v2/positions")

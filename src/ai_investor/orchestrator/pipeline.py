@@ -34,8 +34,23 @@ class Pipeline:
                                 sector_of=registry.market_data.sector,
                                 price_of=registry.market_data.last_price)
         self.store = AuditStore(self.audit_dir / "audit.db")
-        # orders committed this cycle but not yet filled (e.g. queued overnight)
+        # orders committed but not yet filled — includes anything a PREVIOUS
+        # run left queued at the broker (e.g. after-hours orders overnight)
         self._pending = {"cash": 0.0, "sectors": {}}
+        try:
+            for o in registry.broker.open_orders():
+                if o.signal.value != "buy":
+                    continue
+                cost = o.quantity * registry.market_data.last_price(o.ticker)
+                self._pending["cash"] += cost
+                sector = registry.market_data.sector(o.ticker)
+                self._pending["sectors"][sector] = (
+                    self._pending["sectors"].get(sector, 0.0) + cost)
+            if self._pending["cash"]:
+                print(f"[risk] {len(registry.broker.open_orders())} queued orders "
+                      f"already commit ${self._pending['cash']:,.0f}")
+        except Exception as e:
+            print(f"[risk] could not read open orders: {e}")
 
     def run_cycle(self, ticker: str, budget: float,
                   strategy: str = "momentum") -> RunRecord:

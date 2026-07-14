@@ -58,6 +58,11 @@ class Broker(ABC):
     @abstractmethod
     def portfolio(self) -> PortfolioState: ...
 
+    def open_orders(self) -> list[Order]:
+        """Orders accepted but not yet filled (e.g. queued overnight).
+        Local sims fill instantly, so the default is empty."""
+        return []
+
 
 class Notifier(ABC):
     @abstractmethod
