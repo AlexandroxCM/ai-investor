@@ -45,6 +45,10 @@ class Pipeline:
         rec.reports = [agent.run(ticker) for agent in self.research]
         rec.reports.append(
             self.macro.run_market().model_copy(update={"ticker": ticker}))
+        from ai_investor.agents.market_research import MarketResearchAgent
+        briefing = MarketResearchAgent.load_today(self.audit_dir)
+        if briefing:
+            rec.reports.append(MarketResearchAgent.as_report(briefing, ticker))
 
         last_price = self.reg.market_data.last_price(ticker)
         held_qty = next((p.quantity for p in self.reg.broker.portfolio().positions

@@ -14,13 +14,15 @@ PYTHON = sys.executable
 
 DAY_ENTRIES = "\n".join(
     f"    <dict><key>Weekday</key><integer>{d}</integer>"
-    f"<key>Hour</key><integer>13</integer>"
-    f"<key>Minute</key><integer>35</integer></dict>"
-    for d in range(1, 6))
+    f"<key>Hour</key><integer>{h}</integer>"
+    f"<key>Minute</key><integer>{m}</integer></dict>"
+    for d in range(1, 6) for h, m in ((6, 15), (13, 35)))
 
-SHELL_CMD = (f"cd {ROOT} && {PYTHON} scripts/run_cycle.py >> runs/autostart.log 2>&1; "
+SHELL_CMD = (f"cd {ROOT} && if [ $(date +%H) -lt 10 ]; then {PYTHON} "
+             f"scripts/morning_briefing.py >> runs/autostart.log 2>&1; else "
+             f"{PYTHON} scripts/run_cycle.py >> runs/autostart.log 2>&1; "
              f"if [ $(date +%u) = 5 ]; then sleep 900 && {PYTHON} "
-             f"scripts/weekly_report.py >> runs/autostart.log 2>&1; fi")
+             f"scripts/weekly_report.py >> runs/autostart.log 2>&1; fi; fi")
 
 TEMPLATE = f"""<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN"
@@ -52,7 +54,7 @@ def main() -> None:
     result = subprocess.run(["launchctl", "load", str(PLIST)],
                             capture_output=True, text=True)
     if result.returncode == 0:
-        print(f"Autostart installed: weekdays 1:35pm PT (4:35pm ET).")
+        print("Autostart installed: briefing 6:15am PT, cycle 1:35pm PT, weekdays.")
         print(f"Plist: {PLIST}")
         print(f"Logs:  {ROOT}/runs/autostart.log")
         print("Remove with: python scripts/install_autostart.py remove")
