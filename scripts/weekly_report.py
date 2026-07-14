@@ -60,8 +60,23 @@ def main() -> None:
                      f"Edge vs boring: {edge:+.2f}")
 
     report = "\n".join(lines)
+
+    # Learning Agent: reads the week, writes observations + candidate
+    # improvements. Report-only by design — it never rewrites the strategy.
+    reg = Registry(ROOT / "config" / "settings.yaml")
+    try:
+        review = reg.llm.complete(
+            "You are the Learning Agent of an automated investment system. "
+            "Given this week's stats, write: (1) two observations about the "
+            "system's behavior, (2) two candidate improvements for a human to "
+            "review. Be specific and skeptical; small samples prove nothing. "
+            "Max 90 words total.\n\n" + report)
+        report += "\n\n--- Learning Agent review ---\n" + review.strip()
+    except Exception as e:
+        report += f"\n(learning review unavailable: {type(e).__name__})"
+
     print(report)
-    Registry(ROOT / "config" / "settings.yaml").notifier.send(report)
+    reg.notifier.send(report)
 
 
 if __name__ == "__main__":

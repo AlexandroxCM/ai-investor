@@ -23,6 +23,17 @@ class MarketDataProvider(ABC):
     def dividend_yield(self, ticker: str) -> float:
         """Trailing annual dividend yield as a fraction (0.013 = 1.3%)."""
 
+    def get_bars_bulk(self, tickers: list[str],
+                      lookback_days: int) -> dict[str, list]:
+        """Batch fetch; providers override with a real bulk API when they have one."""
+        out = {}
+        for t in tickers:
+            try:
+                out[t] = self.get_bars(t, lookback_days)
+            except Exception as e:
+                print(f"[market_data] {t} skipped: {e}")
+        return out
+
     def sector(self, ticker: str) -> str:
         """GICS-style sector; 'ETF' for funds; 'Unknown' if undetermined."""
         from ai_investor.screener.sectors import SECTORS

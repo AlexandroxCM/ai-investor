@@ -33,6 +33,32 @@ class YFinanceData(MarketDataProvider):
                             volume=int(row["Volume"])))
         return bars
 
+    def get_bars_bulk(self, tickers: list[str],
+                      lookback_days: int) -> dict[str, list]:
+        """One batched download instead of a request per symbol."""
+        df = self._yf.download(tickers=" ".join(tickers),
+                               period=f"{max(lookback_days, 5)}d", interval="1d",
+                               auto_adjust=True, group_by="ticker",
+                               progress=False, threads=True)
+        out: dict[str, list] = {}
+        for t in tickers:
+            try:
+                sub = df[t].dropna() if len(tickers) > 1 else df.dropna()
+            except KeyError:
+                continue
+            bars = []
+            for idx, row in sub.iterrows():
+                ts = idx.to_pydatetime()
+                if ts.tzinfo is None:
+                    ts = ts.replace(tzinfo=timezone.utc)
+                bars.append(Bar(ticker=t, date=ts,
+                                open=float(row["Open"]), high=float(row["High"]),
+                                low=float(row["Low"]), close=float(row["Close"]),
+                                volume=int(row["Volume"])))
+            if bars:
+                out[t] = bars
+        return out
+
     def last_price(self, ticker: str) -> float:
         bars = self.get_bars(ticker, 5)
         if not bars:

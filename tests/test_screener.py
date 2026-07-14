@@ -30,3 +30,12 @@ def test_filters_apply():
     data = FakeMarketData()
     sc = Screener(data, ["NVDA"], top_n=5, min_price=10_000)  # impossible floor
     assert sc.top_candidates() == []
+
+
+def test_screener_uses_bulk_fetch():
+    from unittest.mock import MagicMock
+    data = FakeMarketData()
+    data.get_bars_bulk = MagicMock(wraps=data.get_bars_bulk)
+    sc = Screener(data, ["NVDA", "AAPL"], top_n=2, min_dollar_volume=0)
+    sc.top_candidates()
+    data.get_bars_bulk.assert_called_once()

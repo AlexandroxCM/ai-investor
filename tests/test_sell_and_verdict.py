@@ -121,3 +121,24 @@ def test_dead_skeptic_never_crashes_cycle(tmp_path):
     rec = pipe.run_cycle("NVDA", budget=500)  # must complete despite dead judge
     assert rec.verdict is not None
     assert any("skeptic unavailable" in n for n in rec.notes)
+
+
+def test_batched_rebuttals_cover_every_objection():
+    d = DecisionAgent(FakeLLM())
+    prop = TradeProposal(ticker="NVDA", signal=Signal.BUY, quantity=1,
+                         confidence=0.8, thesis="t")
+    objections = [Objection(id="obj-1", text="a"), Objection(id="obj-2", text="b")]
+    rebuttals = d.rebut(prop, objections)
+    assert [r.objection_id for r in rebuttals] == ["obj-1", "obj-2"]
+    assert all(r.response for r in rebuttals)
+
+
+def test_rebuttal_parser_survives_missing_line():
+    llm = MagicMock()
+    llm.complete.return_value = "obj-1: covered."  # model forgot obj-2
+    d = DecisionAgent(llm)
+    prop = TradeProposal(ticker="NVDA", signal=Signal.BUY, quantity=1,
+                         confidence=0.8, thesis="t")
+    rebuttals = d.rebut(prop, [Objection(id="obj-1", text="a"),
+                               Objection(id="obj-2", text="b")])
+    assert rebuttals[1].response == "No specific rebuttal offered."

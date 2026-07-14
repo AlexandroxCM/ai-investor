@@ -41,11 +41,17 @@ class DecisionAgent:
                              cited_reports=[r.agent for r in usable])
 
     def rebut(self, proposal: TradeProposal, objections: list[Objection]) -> list[Rebuttal]:
-        """One iteration only — no unbounded debate loops."""
-        return [
-            Rebuttal(objection_id=o.id,
-                     response=self.llm.complete(
-                         f"Objection to {proposal.signal.value} {proposal.ticker}: {o.text}. "
-                         f"Thesis: {proposal.thesis}. Respond in one sentence."))
-            for o in objections
-        ]
+        """One iteration, ONE call for all objections — halves debate latency."""
+        listing = "\n".join(f"{o.id}: {o.text}" for o in objections)
+        raw = self.llm.complete(
+            f"Trade: {proposal.signal.value} {proposal.ticker}. "
+            f"Thesis: {proposal.thesis}.\nRespond to each objection in one "
+            f"sentence, format '<id>: <response>', one line each:\n{listing}")
+        rebuttals = []
+        for o in objections:
+            response = next((ln.split(":", 1)[1].strip()
+                             for ln in raw.splitlines()
+                             if ln.strip().startswith(o.id) and ":" in ln),
+                            "No specific rebuttal offered.")
+            rebuttals.append(Rebuttal(objection_id=o.id, response=response))
+        return rebuttals

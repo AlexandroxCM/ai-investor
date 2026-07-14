@@ -16,12 +16,13 @@ class Screener:
         self.min_price = min_price
         self.min_dollar_volume = min_dollar_volume
 
-    def _score(self, ticker: str) -> tuple[float, dict] | None:
-        try:
-            bars = self.data.get_bars(ticker, lookback_days=40)
-        except Exception as e:
-            print(f"[screener] {ticker} skipped: {e}")
-            return None
+    def _score(self, ticker: str, bars=None) -> tuple[float, dict] | None:
+        if bars is None:
+            try:
+                bars = self.data.get_bars(ticker, lookback_days=40)
+            except Exception as e:
+                print(f"[screener] {ticker} skipped: {e}")
+                return None
         if len(bars) < 25:
             return None
         closes = [b.close for b in bars]
@@ -41,8 +42,11 @@ class Screener:
         """Rank the universe; always_include (e.g. current holdings) are
         appended so the pipeline never goes blind on an open position."""
         scored: list[tuple[float, str]] = []
+        all_bars = self.data.get_bars_bulk(self.universe, lookback_days=40)
         for ticker in self.universe:
-            result = self._score(ticker)
+            if ticker not in all_bars:
+                continue
+            result = self._score(ticker, bars=all_bars[ticker])
             if result is not None:
                 scored.append((result[0], ticker))
         scored.sort(reverse=True)

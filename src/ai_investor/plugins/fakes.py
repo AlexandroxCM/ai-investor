@@ -21,6 +21,9 @@ class FakeLLM(LLMProvider):
             return "Valuation already prices in the good news.\nMomentum can reverse on macro shifts."
         if "SUSTAIN" in prompt:
             return "obj-1: WITHDRAWN\nobj-2: WITHDRAWN"
+        if "Respond to each objection" in prompt:
+            return "obj-1: The risk is priced in and position sizing covers it.\n" \
+                   "obj-2: Diversification and the stop-loss bound the downside."
         return "Fake thesis: indicators align modestly positive. Position sized conservatively."
 
 
