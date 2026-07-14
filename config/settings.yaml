@@ -3,7 +3,7 @@ plugins:
   llm: groq            # fake | groq | gemini | ollama
   market_data: yfinance    # fake | yfinance
   news: composite           # fake | rss | edgar | composite (edgar+rss, deduped — recommended live)
-  broker: paper         # fake | alpaca_paper | alpaca_live
+  broker: alpaca_paper         # fake | alpaca_paper | alpaca_live
   notifier: console    # console | discord (needs DISCORD_WEBHOOK_URL)
   macro: fred          # fake | fred (needs FRED_API_KEY)
 

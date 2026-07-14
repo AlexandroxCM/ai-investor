@@ -43,7 +43,7 @@ class Registry:
             from ai_investor.persistence.state import StateStore
             from ai_investor.plugins.broker.alpaca import AlpacaBroker
             self.broker = AlpacaBroker()
-            store = StateStore(Path(run_cfg["audit_dir"]) / "state.db")
+            store = StateStore(Path(run_cfg["audit_dir"]) / "state_alpaca.db")
             self.benchmark = PersistentBenchmark(self.market_data, store, bench_ticker)
             if store.get("alpaca_bench_seeded") is None:
                 # benchmark mirrors whatever Alpaca's paper account starts with

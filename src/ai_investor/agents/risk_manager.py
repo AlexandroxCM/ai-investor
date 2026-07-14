@@ -51,7 +51,11 @@ class RiskManager:
         return self.state.halted
 
     def evaluate(self, proposal: TradeProposal, portfolio: PortfolioState,
-                 last_price: float) -> RiskVerdict:
+                 last_price: float, pending: dict | None = None) -> RiskVerdict:
+        """pending = {'cash': committed_this_cycle, 'sectors': {sector: cost}} —
+        orders queued (e.g. after hours) aren't positions yet, but their cash
+        and sector exposure are already spoken for."""
+        pending = pending or {"cash": 0.0, "sectors": {}}
         if self._check_kill_switch(portfolio):
             return RiskVerdict(
                 action=RiskAction.REJECT, approved_quantity=0,
@@ -73,7 +77,8 @@ class RiskManager:
 
             cost = proposal.quantity * last_price
             max_cost_position = self.rules["max_position_pct"] * portfolio.equity
-            max_cost_cash = portfolio.cash - self.rules["min_cash_pct"] * portfolio.equity
+            max_cost_cash = (portfolio.cash - pending["cash"]
+                             - self.rules["min_cash_pct"] * portfolio.equity)
             limits = {"max_position_pct": max_cost_position,
                       "min_cash_pct": max_cost_cash}
 
@@ -85,6 +90,7 @@ class RiskManager:
                         pos.quantity * self.price_of(pos.ticker)
                         for pos in portfolio.positions
                         if self.sector_of(pos.ticker) == sector)
+                    exposure += pending["sectors"].get(sector, 0.0)
                     limits["max_sector_pct"] = max_sector * portfolio.equity - exposure
 
             binding_rule = min(limits, key=limits.get)

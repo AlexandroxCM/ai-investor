@@ -34,6 +34,8 @@ class Pipeline:
                                 sector_of=registry.market_data.sector,
                                 price_of=registry.market_data.last_price)
         self.store = AuditStore(self.audit_dir / "audit.db")
+        # orders committed this cycle but not yet filled (e.g. queued overnight)
+        self._pending = {"cash": 0.0, "sectors": {}}
 
     def run_cycle(self, ticker: str, budget: float) -> RunRecord:
         rec = RunRecord(run_id=f"{ticker}-{uuid.uuid4().hex[:8]}")
@@ -50,7 +52,8 @@ class Pipeline:
             rec.rebuttals = self.decision.rebut(rec.proposal, rec.objections)
 
         portfolio = self.reg.broker.portfolio()
-        rec.verdict = self.risk.evaluate(rec.proposal, portfolio, last_price)
+        rec.verdict = self.risk.evaluate(rec.proposal, portfolio, last_price,
+                                         pending=self._pending)
 
         if (rec.verdict.action in (RiskAction.APPROVE, RiskAction.RESIZE)
                 and rec.proposal.signal != Signal.HOLD
@@ -59,6 +62,12 @@ class Pipeline:
                           quantity=rec.verdict.approved_quantity,
                           client_order_id=rec.run_id)
             rec.order = self.reg.broker.submit(order)
+            if rec.order.status.value != "rejected":
+                cost = rec.order.quantity * last_price
+                self._pending["cash"] += cost
+                sector = self.reg.market_data.sector(ticker)
+                self._pending["sectors"][sector] = (
+                    self._pending["sectors"].get(sector, 0.0) + cost)
         else:
             rec.notes.append(f"no execution: verdict={rec.verdict.action.value}, "
                              f"rules={rec.verdict.rules_triggered}")
