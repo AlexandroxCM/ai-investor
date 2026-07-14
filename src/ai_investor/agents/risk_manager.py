@@ -96,8 +96,9 @@ class RiskManager:
             binding_rule = min(limits, key=limits.get)
             allowed = max(0.0, limits[binding_rule])
 
+            min_order = self.rules.get("min_order_dollars", 50.0)
             if cost > allowed and not triggered:
-                if allowed <= 0:
+                if allowed < min_order:  # dust orders aren't worth the slippage
                     triggered.append(binding_rule)
                 else:
                     return RiskVerdict(

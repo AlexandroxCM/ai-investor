@@ -90,6 +90,7 @@ class Order(BaseModel):
 class RunRecord(BaseModel):
     """One full pipeline cycle — the audit trail unit. Answers 'why did we trade X on date Y'."""
     run_id: str
+    strategy: str = "momentum"  # momentum | earnings — scored separately in reports
     started_at: datetime = Field(default_factory=utcnow)
     reports: list[AgentReport] = []
     proposal: TradeProposal | None = None

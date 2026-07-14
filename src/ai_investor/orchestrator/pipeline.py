@@ -37,8 +37,10 @@ class Pipeline:
         # orders committed this cycle but not yet filled (e.g. queued overnight)
         self._pending = {"cash": 0.0, "sectors": {}}
 
-    def run_cycle(self, ticker: str, budget: float) -> RunRecord:
-        rec = RunRecord(run_id=f"{ticker}-{uuid.uuid4().hex[:8]}")
+    def run_cycle(self, ticker: str, budget: float,
+                  strategy: str = "momentum") -> RunRecord:
+        rec = RunRecord(run_id=f"{ticker}-{uuid.uuid4().hex[:8]}",
+                        strategy=strategy)
 
         rec.reports = [agent.run(ticker) for agent in self.research]
         rec.reports.append(

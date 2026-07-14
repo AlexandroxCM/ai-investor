@@ -29,6 +29,8 @@ def main() -> None:
         print(f"No runs in the last {DAYS} days.")
         return
 
+    by_strategy = Counter(r["strategy"] for r in rows
+                          if r["filled"] and "strategy" in r.keys())
     signals = Counter(r["signal"] for r in rows if r["signal"])
     verdicts = Counter(r["verdict"] for r in rows if r["verdict"])
     rules = Counter(rule for r in rows if r["rules"]
@@ -42,6 +44,9 @@ def main() -> None:
 
     lines = [f"Weekly report ({DAYS}d): {len(rows)} cycles, {len(fills)} fills."]
     lines.append("Signals: " + ", ".join(f"{k}={v}" for k, v in signals.most_common()))
+    if by_strategy:
+        lines.append("Fills by strategy: "
+                     + ", ".join(f"{k}={v}" for k, v in by_strategy.most_common()))
     lines.append("Verdicts: " + ", ".join(f"{k}={v}" for k, v in verdicts.most_common()))
     if rules:
         lines.append("Risk rules triggered: "

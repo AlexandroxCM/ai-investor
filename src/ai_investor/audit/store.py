@@ -10,6 +10,7 @@ from ai_investor.core.models import RunRecord
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS runs (
     run_id      TEXT PRIMARY KEY,
+    strategy    TEXT NOT NULL DEFAULT 'momentum',
     started_at  TEXT NOT NULL,
     ticker      TEXT NOT NULL,
     signal      TEXT,
@@ -30,6 +31,10 @@ class AuditStore:
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
         with self._conn() as c:
             c.executescript(SCHEMA)
+            cols = [r[1] for r in c.execute("PRAGMA table_info(runs)")]
+            if "strategy" not in cols:  # migrate pre-earnings databases in place
+                c.execute("ALTER TABLE runs ADD COLUMN strategy TEXT NOT NULL "
+                          "DEFAULT 'momentum'")
 
     def _conn(self) -> sqlite3.Connection:
         conn = sqlite3.connect(self.db_path)
@@ -40,8 +45,11 @@ class AuditStore:
         p, v, o = rec.proposal, rec.verdict, rec.order
         with self._conn() as c:
             c.execute(
-                "INSERT OR REPLACE INTO runs VALUES (?,?,?,?,?,?,?,?,?,?)",
-                (rec.run_id, rec.started_at.isoformat(),
+                "INSERT OR REPLACE INTO runs "
+                "(run_id, strategy, started_at, ticker, signal, confidence, "
+                " verdict, rules, filled, fill_price, record_json) "
+                "VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                (rec.run_id, rec.strategy, rec.started_at.isoformat(),
                  p.ticker if p else "", p.signal.value if p else None,
                  p.confidence if p else None,
                  v.action.value if v else None,
