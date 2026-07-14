@@ -17,7 +17,8 @@ PRESETS = {
     },
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
-        "model": "gemini-2.0-flash",
+        # 2.5-flash-lite has the healthiest free quota after Google's Dec 2025 cuts
+        "model": "models/gemma-4-26b-a4b-it",
         "key_env": "GEMINI_API_KEY",
     },
 }
@@ -58,10 +59,15 @@ class OpenAICompatLLM(LLMProvider):
                 wait = float(resp.headers.get("retry-after", 2 ** attempt * 3))
                 print(f"[llm] rate limited, waiting {wait:.0f}s "
                       f"(attempt {attempt + 1}/{self.max_retries})")
+                if attempt == 0:  # show the quota detail once — 'limit: 0' means wrong model/tier
+                    print(f"[llm] detail: {resp.text[:200]}")
                 time.sleep(wait + 0.5)
                 continue
             resp.raise_for_status()
-            return resp.json()["choices"][0]["message"]["content"]
+            content = resp.json()["choices"][0]["message"]["content"]
+            if "</thought>" in content:  # some models emit visible reasoning first
+                content = content.split("</thought>", 1)[1]
+            return content.strip()
         raise RuntimeError("LLM rate-limit retries exhausted — try again later "
                            "or lower screener top_n")
 

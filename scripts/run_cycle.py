@@ -43,6 +43,12 @@ def pick_universe(reg: Registry) -> tuple[list[str], set[str]]:
 def main() -> None:
     reg = Registry(ROOT / "config" / "settings.yaml")
     pipe = Pipeline(reg, ROOT / "config" / "risk_rules.yaml")
+    exits = pipe.exit_sweep()
+    for rec in exits:
+        o = rec.order
+        print(f"[{rec.proposal.ticker:5}] EXIT  {rec.verdict.note} "
+              f"{'filled @' + format(o.fill_price, '.2f') if o and o.fill_price else '(queued)'}")
+
     tickers, earnings_set = pick_universe(reg)
     equity = reg.broker.portfolio().equity
     budget_per_ticker = max(equity * 0.10, 1.0)  # risk manager still has final say

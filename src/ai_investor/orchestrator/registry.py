@@ -21,6 +21,13 @@ class Registry:
         p = self.settings["plugins"]
 
         self.llm = self._make_llm(p["llm"])
+        skeptic_choice = p.get("skeptic_llm") or p["llm"]
+        try:
+            self.skeptic_llm = (self.llm if skeptic_choice == p["llm"]
+                                else self._make_llm(skeptic_choice))
+        except RuntimeError as e:  # e.g. GEMINI_API_KEY not set yet
+            print(f"[registry] skeptic model unavailable ({e}); using main LLM")
+            self.skeptic_llm = self.llm
         self.market_data = self._make_market_data(p["market_data"])
         self.news = self._make_news(p["news"])
         self.macro = self._make_macro(p.get("macro", "fake"))

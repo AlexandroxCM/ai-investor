@@ -19,6 +19,8 @@ class FakeLLM(LLMProvider):
                                "summary": "fake: mildly positive coverage"})
         if "devil's advocate" in prompt:
             return "Valuation already prices in the good news.\nMomentum can reverse on macro shifts."
+        if "SUSTAIN" in prompt:
+            return "obj-1: WITHDRAWN\nobj-2: WITHDRAWN"
         return "Fake thesis: indicators align modestly positive. Position sized conservatively."
 
 

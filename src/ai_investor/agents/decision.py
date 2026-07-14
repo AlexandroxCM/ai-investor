@@ -16,7 +16,7 @@ class DecisionAgent:
         self.sell_threshold = sell_threshold
 
     def propose(self, ticker: str, reports: list[AgentReport], budget: float,
-                last_price: float) -> TradeProposal:
+                last_price: float, held_qty: float = 0.0) -> TradeProposal:
         usable = [r for r in reports if r.confidence > 0]
         if not usable:
             return TradeProposal(ticker=ticker, signal=Signal.HOLD, quantity=0,
@@ -26,8 +26,8 @@ class DecisionAgent:
 
         if weighted >= self.buy_threshold:
             signal, qty = Signal.BUY, round(budget / last_price, 4)
-        elif weighted <= self.sell_threshold:
-            signal, qty = Signal.SELL, 0.0  # sell sizing handled by portfolio in later phase
+        elif weighted <= self.sell_threshold and held_qty > 0:
+            signal, qty = Signal.SELL, held_qty  # exit the full position
         else:
             signal, qty = Signal.HOLD, 0.0
 

@@ -5,3 +5,7 @@ max_open_positions: 8
 max_drawdown_halt_pct: 0.20 # kill switch: halt all trading past 20% drawdown
 min_confidence: 0.60        # reject proposals below this confidence
 max_sector_pct: 0.40      # no single sector > 40% of equity (ETFs exempt)
+stop_loss_pct: 0.15
+take_profit_pct: 0.50
+cooldown_days: 3
+min_order_dollars: 50

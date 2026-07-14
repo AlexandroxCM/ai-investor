@@ -51,6 +51,35 @@ def summary():
             "equity": latest.get("equity"), "benchmark": latest.get("benchmark")}
 
 
+@app.get("/api/positions")
+def positions():
+    """Live positions with P&L straight from Alpaca (empty if not configured)."""
+    import os
+
+    import requests as rq
+
+    from ai_investor.core.env import load_env
+    load_env(ROOT)
+    key, sec = os.environ.get("ALPACA_API_KEY"), os.environ.get("ALPACA_SECRET_KEY")
+    if not key or not sec:
+        return []
+    try:
+        r = rq.get("https://paper-api.alpaca.markets/v2/positions",
+                   headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec},
+                   timeout=10)
+        r.raise_for_status()
+        return [{"ticker": pos["symbol"], "qty": float(pos["qty"]),
+                 "avg_cost": float(pos["avg_entry_price"]),
+                 "price": float(pos["current_price"]),
+                 "value": float(pos["market_value"]),
+                 "pl": float(pos["unrealized_pl"]),
+                 "pl_pct": float(pos["unrealized_plpc"]) * 100}
+                for pos in r.json()]
+    except Exception as e:
+        print(f"[dashboard] positions unavailable: {e}")
+        return []
+
+
 @app.get("/api/runs")
 def runs(limit: int = 100):
     return q("""SELECT run_id, started_at, ticker, signal, confidence, verdict,
@@ -146,6 +175,16 @@ overlay{display:none}
     <div class="chartbox"><canvas id="chart"></canvas></div>
   </div>
 
+  <div class="panel" id="pos-panel" hidden>
+    <h2>Open positions — live from Alpaca</h2>
+    <div style="overflow-x:auto">
+    <table id="positions">
+      <thead><tr><th>Ticker</th><th>Qty</th><th>Avg Cost</th><th>Price</th><th>Value</th><th>P&amp;L</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
+  </div>
+
   <div class="panel">
     <h2>Run ledger — select a row to read the full reasoning chain</h2>
     <div style="overflow-x:auto">
@@ -181,6 +220,16 @@ async function load(){
     <div class="cell"><div class="k">Fills</div><div class="v">${s.stats.fills??0}</div></div>
     <div class="cell"><div class="k">Risk rejections</div><div class="v">${s.stats.rejections??0}</div></div>`;
   drawChart(s.points);
+  const pos=await (await fetch('/api/positions')).json();
+  if(pos.length){
+    $('#pos-panel').hidden=false;
+    $('#positions tbody').innerHTML=pos.map(p=>{
+      const cls=p.pl>0?'sig-buy':p.pl<0?'sig-sell':'sig-hold';
+      return `<tr style="cursor:default"><td>${esc(p.ticker)}</td><td>${p.qty}</td>`+
+        `<td>${money(p.avg_cost)}</td><td>${money(p.price)}</td><td>${money(p.value)}</td>`+
+        `<td class="${cls}">${p.pl>=0?'+':''}${p.pl.toFixed(2)} (${p.pl_pct>=0?'+':''}${p.pl_pct.toFixed(2)}%)</td></tr>`;
+    }).join('');
+  }
   const runs=await (await fetch('/api/runs')).json();
   const tb=$('#ledger tbody'); tb.innerHTML='';
   $('#empty').hidden=runs.length>0;

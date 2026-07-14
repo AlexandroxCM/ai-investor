@@ -1,6 +1,7 @@
 # Which plugin implements each interface. Swapping = editing one line.
 plugins:
-  llm: groq            # fake | groq | gemini | ollama
+  llm: groq
+  skeptic_llm: gemini            # fake | groq | gemini | ollama
   market_data: yfinance    # fake | yfinance
   news: composite           # fake | rss | edgar | composite (edgar+rss, deduped — recommended live)
   broker: alpaca_paper         # fake | alpaca_paper | alpaca_live

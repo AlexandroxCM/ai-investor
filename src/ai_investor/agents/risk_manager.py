@@ -7,6 +7,7 @@ scripts/reset_kill_switch.py. Halting is automatic; resuming never is."""
 from __future__ import annotations
 
 import json
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import yaml
@@ -21,11 +22,13 @@ class RiskState:
         data = json.loads(self.path.read_text()) if self.path.exists() else {}
         self.high_water_mark: float = data.get("high_water_mark", 0.0)
         self.halted: bool = data.get("halted", False)
+        self.last_trades: dict = data.get("last_trades", {})
 
     def save(self) -> None:
         self.path.parent.mkdir(parents=True, exist_ok=True)
         self.path.write_text(json.dumps(
-            {"high_water_mark": self.high_water_mark, "halted": self.halted}, indent=2))
+            {"high_water_mark": self.high_water_mark, "halted": self.halted,
+             "last_trades": self.last_trades}, indent=2))
 
 
 class RiskManager:
@@ -71,7 +74,28 @@ class RiskManager:
         if proposal.confidence < self.rules["min_confidence"]:
             triggered.append("min_confidence")
 
+        if proposal.signal == Signal.SELL:
+            held = next((pos.quantity for pos in portfolio.positions
+                         if pos.ticker == proposal.ticker), 0.0)
+            if held <= 0:
+                return RiskVerdict(action=RiskAction.REJECT, approved_quantity=0,
+                                   rules_triggered=["no_position"],
+                                   note="cannot sell what we don't hold")
+            if triggered:
+                return RiskVerdict(action=RiskAction.REJECT, approved_quantity=0,
+                                   rules_triggered=triggered)
+            qty = min(proposal.quantity, held)
+            return RiskVerdict(action=RiskAction.APPROVE if qty == proposal.quantity
+                               else RiskAction.RESIZE, approved_quantity=qty)
+
         if proposal.signal == Signal.BUY:
+            cooldown_days = self.rules.get("cooldown_days", 0)
+            last = self.state.last_trades.get(proposal.ticker)
+            if cooldown_days and last:
+                until = datetime.fromisoformat(last) + timedelta(days=cooldown_days)
+                if datetime.now(timezone.utc) < until:
+                    triggered.append("cooldown")
+
             if len(portfolio.positions) >= self.rules["max_open_positions"]:
                 triggered.append("max_open_positions")
 
@@ -111,3 +135,8 @@ class RiskManager:
             return RiskVerdict(action=RiskAction.REJECT, approved_quantity=0,
                                rules_triggered=triggered)
         return RiskVerdict(action=RiskAction.APPROVE, approved_quantity=proposal.quantity)
+
+    def record_trade(self, ticker: str) -> None:
+        """Called after any fill/submit — starts the re-trade cooldown clock."""
+        self.state.last_trades[ticker] = datetime.now(timezone.utc).isoformat()
+        self.state.save()
