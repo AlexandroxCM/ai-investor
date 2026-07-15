@@ -6,6 +6,7 @@ import uuid
 from pathlib import Path
 
 from ai_investor.agents.decision import DecisionAgent
+from ai_investor.agents.fundamental import FundamentalAgent
 from ai_investor.agents.macro import MacroAgent
 from ai_investor.agents.news import NewsAgent
 from ai_investor.agents.risk_manager import RiskManager
@@ -22,6 +23,7 @@ class Pipeline:
         self.reg = registry
         self.research = [
             TechnicalAgent(registry.market_data),
+            FundamentalAgent(registry.fundamentals, registry.market_data),
             NewsAgent(registry.llm, registry.news),
         ]
         self.macro = MacroAgent(registry.macro)

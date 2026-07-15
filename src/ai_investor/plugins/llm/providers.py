@@ -27,7 +27,7 @@ PRESETS = {
 class OpenAICompatLLM(LLMProvider):
     def __init__(self, preset: str = "groq", model: str | None = None,
                  base_url: str | None = None, api_key: str | None = None,
-                 temperature: float = 0.0, min_interval: float = 2.5,
+                 temperature: float = 0.0, min_interval: float = 2.0,
                  max_retries: int = 5):
         cfg = PRESETS.get(preset, {})
         self.base_url = base_url or cfg.get("base_url", "")

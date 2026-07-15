@@ -46,6 +46,14 @@ class MacroProvider(ABC):
         """Monthly/daily observations, oldest -> newest, missing values dropped."""
 
 
+class FundamentalsProvider(ABC):
+    @abstractmethod
+    def get_metrics(self, ticker: str) -> dict:
+        """Fundamental metrics as fractions/ratios. Missing values omitted.
+        Keys: forward_pe, price_to_sales, revenue_growth, profit_margin,
+        gross_margin, debt_to_equity, free_cash_flow."""
+
+
 class NewsProvider(ABC):
     @abstractmethod
     def get_articles(self, ticker: str, limit: int = 5) -> list[Article]: ...

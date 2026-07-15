@@ -1,7 +1,7 @@
 # Which plugin implements each interface. Swapping = editing one line.
 plugins:
   llm: groq
-  skeptic_llm: gemini            # fake | groq | gemini | ollama
+  skeptic_llm: groq
   market_data: yfinance    # fake | yfinance
   news: composite           # fake | rss | edgar | composite (edgar+rss, deduped — recommended live)
   broker: alpaca_paper         # fake | alpaca_paper | alpaca_live
@@ -12,12 +12,13 @@ universe:
   mode: screener         # watchlist | screener
   watchlist: [NVDA, AAPL, MSFT, VOO, QQQ]
   screener:
-    top_n: 12
+    top_n: 8
     min_price: 5.0
     min_dollar_volume: 5000000
 
 run:
   starting_cash: 1000.0
+  trade_budget: 100
   audit_dir: runs
   slippage_bps: 5      # paper-fill haircut, always against you
 

@@ -7,7 +7,8 @@ import random
 from datetime import datetime, timedelta, timezone
 
 from ai_investor.core.enums import OrderStatus, Signal
-from ai_investor.core.interfaces.providers import (Broker, LLMProvider, MacroProvider,
+from ai_investor.core.interfaces.providers import (Broker, FundamentalsProvider,
+                                                   LLMProvider, MacroProvider,
                                                    MarketDataProvider, NewsProvider)
 from ai_investor.core.models import Article, Bar, Order, PortfolioState, Position
 
@@ -134,3 +135,14 @@ class FakeMacro(MacroProvider):
 
     def get_series(self, series_id: str, limit: int = 24) -> list[float]:
         return self.SERIES.get(series_id, [])[-limit:]
+
+
+class FakeFundamentals(FundamentalsProvider):
+    """Healthy-company defaults; override METRICS in tests."""
+
+    METRICS = {"forward_pe": 22.0, "price_to_sales": 5.0, "revenue_growth": 0.18,
+               "profit_margin": 0.20, "gross_margin": 0.55,
+               "debt_to_equity": 0.6, "free_cash_flow": 5_000_000_000.0}
+
+    def get_metrics(self, ticker: str) -> dict:
+        return dict(self.METRICS)

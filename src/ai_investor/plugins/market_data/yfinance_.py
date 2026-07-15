@@ -21,7 +21,7 @@ class YFinanceData(MarketDataProvider):
 
     def get_bars(self, ticker: str, lookback_days: int) -> list[Bar]:
         hist = self._ticker(ticker).history(period=f"{max(lookback_days, 5)}d",
-                                            interval="1d", auto_adjust=True)
+                                            interval="1d", auto_adjust=True).dropna()
         bars = []
         for idx, row in hist.iterrows():
             ts = idx.to_pydatetime()

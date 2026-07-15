@@ -1,5 +1,7 @@
 """Run one full pipeline cycle. Universe comes from the watchlist or,
 in screener mode, from scanning S&P 100 + top ETFs for the best candidates.
+Per-trade budget: fixed dollar amount via run.trade_budget in settings.yaml
+(e.g. 100), else defaults to 10% of equity.
 Usage: python scripts/run_cycle.py"""
 import sys
 from pathlib import Path
@@ -43,6 +45,7 @@ def pick_universe(reg: Registry) -> tuple[list[str], set[str]]:
 def main() -> None:
     reg = Registry(ROOT / "config" / "settings.yaml")
     pipe = Pipeline(reg, ROOT / "config" / "risk_rules.yaml")
+
     exits = pipe.exit_sweep()
     for rec in exits:
         o = rec.order
@@ -51,7 +54,11 @@ def main() -> None:
 
     tickers, earnings_set = pick_universe(reg)
     equity = reg.broker.portfolio().equity
-    budget_per_ticker = max(equity * 0.10, 1.0)  # risk manager still has final say
+    configured = reg.settings["run"].get("trade_budget")
+    budget_per_ticker = (float(configured) if configured
+                         else max(equity * 0.10, 1.0))
+    print(f"Per-trade budget: ${budget_per_ticker:,.2f}"
+          + (" (fixed)" if configured else " (10% of equity)"))
 
     trades = []
     for ticker in tickers:

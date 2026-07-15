@@ -8,7 +8,8 @@ import yaml
 
 from ai_investor.core.benchmark import PersistentBenchmark, ShadowBenchmark
 from ai_investor.core.env import load_env
-from ai_investor.plugins.fakes import (FakeBroker, FakeLLM, FakeMacro,
+from ai_investor.plugins.fakes import (FakeBroker, FakeFundamentals,
+                                       FakeLLM, FakeMacro,
                                        FakeMarketData, FakeNews)
 from ai_investor.plugins.notifiers import ConsoleNotifier, DiscordNotifier
 
@@ -31,6 +32,13 @@ class Registry:
         self.market_data = self._make_market_data(p["market_data"])
         self.news = self._make_news(p["news"])
         self.macro = self._make_macro(p.get("macro", "fake"))
+        # fundamentals source follows the market data choice unless overridden
+        fund_choice = p.get("fundamentals", p["market_data"])
+        if fund_choice == "fake":
+            self.fundamentals = FakeFundamentals()
+        else:
+            from ai_investor.plugins.fundamentals.yfinance_ import YFinanceFundamentals
+            self.fundamentals = YFinanceFundamentals()
 
         run_cfg = self.settings["run"]
         bench_ticker = self.settings.get("benchmark", {}).get("ticker", "VOO")
