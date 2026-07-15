@@ -43,3 +43,13 @@ def test_deterministic_market_data(tmp_path):
     a = reg.market_data.get_bars("AAPL", 30)
     b = reg.market_data.get_bars("AAPL", 30)
     assert [x.close for x in a] == [x.close for x in b]
+
+
+def test_nan_price_is_guarded_not_traded(tmp_path):
+    reg = Registry(make_settings(tmp_path))
+    reg.market_data.last_price = lambda t: float("nan")
+    pipe = Pipeline(reg, make_rules(tmp_path))
+    rec = pipe.run_cycle("NVDA", budget=100)
+    assert rec.order is None
+    assert rec.proposal.signal.value == "hold"
+    assert "price guard" in " ".join(rec.notes)

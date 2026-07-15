@@ -68,6 +68,17 @@ class Pipeline:
             rec.reports.append(MarketResearchAgent.as_report(briefing, ticker))
 
         last_price = self.reg.market_data.last_price(ticker)
+        if last_price != last_price or last_price <= 0:  # NaN or degenerate quote
+            rec.proposal = TradeProposal(ticker=ticker, signal=Signal.HOLD,
+                                         quantity=0, confidence=0.0,
+                                         thesis="no valid price — data source "
+                                                "returned NaN/zero; skipping")
+            rec.verdict = RiskVerdict(action=RiskAction.APPROVE,
+                                      approved_quantity=0,
+                                      note="skipped: invalid price data")
+            rec.notes.append("price guard tripped")
+            self._audit(rec)
+            return rec
         held_qty = next((p.quantity for p in self.reg.broker.portfolio().positions
                          if p.ticker == ticker), 0.0)
         rec.proposal = self.decision.propose(ticker, rec.reports, budget,
