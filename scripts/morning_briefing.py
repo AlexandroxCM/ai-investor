@@ -13,7 +13,26 @@ from ai_investor.screener.universe import DEFAULT_UNIVERSE
 ROOT = Path(__file__).parent.parent
 
 
+def wait_for_network(timeout_s: int = 180) -> bool:
+    """Post-wake, wifi can lag the scheduler by a minute. Wait politely."""
+    import socket
+    import time
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            socket.getaddrinfo("paper-api.alpaca.markets", 443)
+            return True
+        except OSError:
+            print("[net] no network yet, retrying in 10s...")
+            time.sleep(10)
+    return False
+
+
+
 def main() -> None:
+    if not wait_for_network():
+        print("[net] no network after 3 minutes — skipping this run")
+        return
     reg = Registry(ROOT / "config" / "settings.yaml")
     macro = MacroAgent(reg.macro).run_market()
     agent = MarketResearchAgent(reg.market_data, reg.llm, DEFAULT_UNIVERSE)

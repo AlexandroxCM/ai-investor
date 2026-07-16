@@ -14,6 +14,22 @@ from ai_investor.orchestrator.registry import Registry
 ROOT = Path(__file__).parent.parent
 
 
+def wait_for_network(timeout_s: int = 180) -> bool:
+    """Post-wake, wifi can lag the scheduler by a minute. Wait politely."""
+    import socket
+    import time
+    deadline = time.time() + timeout_s
+    while time.time() < deadline:
+        try:
+            socket.getaddrinfo("paper-api.alpaca.markets", 443)
+            return True
+        except OSError:
+            print("[net] no network yet, retrying in 10s...")
+            time.sleep(10)
+    return False
+
+
+
 def pick_universe(reg: Registry) -> tuple[list[str], set[str]]:
     """Returns (tickers, earnings_tagged) — reporters ride the earnings strategy."""
     cfg = reg.settings["universe"]
@@ -43,6 +59,9 @@ def pick_universe(reg: Registry) -> tuple[list[str], set[str]]:
 
 
 def main() -> None:
+    if not wait_for_network():
+        print("[net] no network after 3 minutes — skipping this run")
+        return
     reg = Registry(ROOT / "config" / "settings.yaml")
     pipe = Pipeline(reg, ROOT / "config" / "risk_rules.yaml")
 
