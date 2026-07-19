@@ -29,6 +29,28 @@ def q(sql: str, args: tuple = ()) -> list[dict]:
         conn.close()
 
 
+def _cash_pct():
+    import os
+
+    import requests as rq
+
+    from ai_investor.core.env import load_env
+    load_env(ROOT)
+    key, sec = os.environ.get("ALPACA_API_KEY"), os.environ.get("ALPACA_SECRET_KEY")
+    if not key or not sec:
+        return None
+    try:
+        r = rq.get("https://paper-api.alpaca.markets/v2/account",
+                   headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec},
+                   timeout=10)
+        r.raise_for_status()
+        a = r.json()
+        equity = float(a["equity"])
+        return round(float(a["cash"]) / equity * 100, 1) if equity else None
+    except Exception:
+        return None
+
+
 @app.get("/api/summary")
 def summary():
     rows = q("SELECT record_json, started_at FROM runs ORDER BY started_at")
@@ -48,7 +70,40 @@ def summary():
     if latest.get("equity") is not None and latest.get("benchmark") is not None:
         edge = round(latest["equity"] - latest["benchmark"], 2)
     return {"points": points, "stats": stats, "edge": edge,
-            "equity": latest.get("equity"), "benchmark": latest.get("benchmark")}
+            "equity": latest.get("equity"), "benchmark": latest.get("benchmark"),
+            "cash_pct": _cash_pct()}
+
+
+@app.get("/api/briefing")
+def briefing():
+    from ai_investor.agents.market_research import MarketResearchAgent
+    b = MarketResearchAgent.load_today(ROOT / "runs")
+    return b or {}
+
+
+@app.get("/api/open_orders")
+def open_orders():
+    import os
+
+    import requests as rq
+
+    from ai_investor.core.env import load_env
+    load_env(ROOT)
+    key, sec = os.environ.get("ALPACA_API_KEY"), os.environ.get("ALPACA_SECRET_KEY")
+    if not key or not sec:
+        return []
+    try:
+        r = rq.get("https://paper-api.alpaca.markets/v2/orders?status=open&limit=50",
+                   headers={"APCA-API-KEY-ID": key, "APCA-API-SECRET-KEY": sec},
+                   timeout=10)
+        r.raise_for_status()
+        return [{"ticker": o["symbol"], "side": o["side"],
+                 "qty": float(o["qty"]),
+                 "submitted": o.get("submitted_at", "")[:16].replace("T", " ")}
+                for o in r.json()]
+    except Exception as e:
+        print(f"[dashboard] open orders unavailable: {e}")
+        return []
 
 
 @app.get("/api/positions")
@@ -144,6 +199,8 @@ tr:focus-visible td{outline:2px solid var(--amber);outline-offset:-2px}
 #drawer .head .t{font:600 13px var(--mono);letter-spacing:.08em}
 #drawer .head button{background:none;border:1px solid var(--line);color:var(--dim);font:500 11px var(--mono);padding:5px 12px;cursor:pointer;letter-spacing:.08em}
 #drawer .head button:hover{color:var(--paper);border-color:var(--dim)}
+.rangebtn{background:none;border:1px solid var(--line);color:var(--dim);font:500 10px var(--mono);padding:2px 10px;cursor:pointer;letter-spacing:.08em;margin-left:6px}
+.rangebtn.active,.rangebtn:hover{color:var(--amber);border-color:var(--amber)}
 .transcript{padding:20px}
 .turn{margin-bottom:18px;padding-left:14px;border-left:2px solid var(--line)}
 .turn .who{font:600 10px var(--mono);letter-spacing:.14em;text-transform:uppercase;margin-bottom:5px}
@@ -168,11 +225,37 @@ overlay{display:none}
     <span class="sub" id="asof">reading runs/audit.db…</span>
   </header>
 
+  <div class="panel" id="brief-panel" hidden>
+    <h2>Today's market stance — pre-market briefing</h2>
+    <div style="padding:14px 16px">
+      <span class="stamp" id="brief-regime" style="margin-right:10px"></span>
+      <span id="brief-text" style="font-size:13px;color:var(--paper)"></span>
+      <div class="turn" style="border:none;padding:8px 0 0 0;margin:0">
+        <span class="meta" id="brief-metrics" style="font:400 11px var(--mono);color:var(--dim)"></span>
+      </div>
+    </div>
+  </div>
+
   <div class="board" id="board"></div>
 
   <div class="panel">
-    <h2>Equity vs benchmark</h2>
+    <h2>Equity vs benchmark
+      <span style="float:right">
+        <button class="rangebtn" data-days="7">7d</button>
+        <button class="rangebtn" data-days="0">all</button>
+      </span>
+    </h2>
     <div class="chartbox"><canvas id="chart"></canvas></div>
+  </div>
+
+  <div class="panel" id="queued-panel" hidden>
+    <h2>Queued orders — waiting for next market open</h2>
+    <div style="overflow-x:auto">
+    <table id="queued">
+      <thead><tr><th>Ticker</th><th>Side</th><th>Qty</th><th>Submitted (UTC)</th></tr></thead>
+      <tbody></tbody>
+    </table>
+    </div>
   </div>
 
   <div class="panel" id="pos-panel" hidden>
@@ -218,8 +301,26 @@ async function load(){
     <div class="cell"><div class="k">Edge vs boring</div><div class="v ${edgeCls}">${s.edge==null?'—':(s.edge>0?'+':'')+s.edge.toFixed(2)}</div></div>
     <div class="cell"><div class="k">Cycles</div><div class="v">${s.stats.cycles??0}</div></div>
     <div class="cell"><div class="k">Fills</div><div class="v">${s.stats.fills??0}</div></div>
-    <div class="cell"><div class="k">Risk rejections</div><div class="v">${s.stats.rejections??0}</div></div>`;
-  drawChart(s.points);
+    <div class="cell"><div class="k">Risk rejections</div><div class="v">${s.stats.rejections??0}</div></div>
+    <div class="cell"><div class="k">Cash allocation</div><div class="v">${s.cash_pct==null?'—':s.cash_pct+'%'}</div></div>`;
+  allPoints=s.points; applyRange();
+  const brief=await (await fetch('/api/briefing')).json();
+  if(brief.metrics){
+    $('#brief-panel').hidden=false;
+    const m=brief.metrics;
+    const cls=m.regime==='risk-on'?'approve':m.regime==='risk-off'?'reject':'resize';
+    $('#brief-regime').className='stamp '+cls;
+    $('#brief-regime').textContent=m.regime;
+    $('#brief-text').textContent=brief.briefing;
+    $('#brief-metrics').textContent=`breadth ${(m.breadth*100).toFixed(0)}% · index trend ${(m.trend_20d*100).toFixed(1)}% · vol ${(m.vol_annual*100).toFixed(0)}% · ${brief.date}`;
+  }
+  const queued=await (await fetch('/api/open_orders')).json();
+  if(queued.length){
+    $('#queued-panel').hidden=false;
+    $('#queued tbody').innerHTML=queued.map(o=>
+      `<tr style="cursor:default"><td>${esc(o.ticker)}</td><td class="sig-${esc(o.side)}">${esc(o.side)}</td>`+
+      `<td>${o.qty}</td><td>${esc(o.submitted)}</td></tr>`).join('');
+  }
   const pos=await (await fetch('/api/positions')).json();
   if(pos.length){
     $('#pos-panel').hidden=false;
@@ -238,7 +339,7 @@ async function load(){
     tr.innerHTML=`<td>${esc(r.started_at.slice(0,19).replace('T',' '))}</td>
       <td>${esc(r.ticker)}</td>
       <td class="sig-${esc(r.signal)}">${esc(r.signal??'—')}</td>
-      <td>${r.confidence==null?'—':Number(r.confidence).toFixed(2)}</td>
+      <td class="${r.confidence!=null&&r.confidence<0.6?'sig-sell':''}">${r.confidence==null?'—':Number(r.confidence).toFixed(2)}</td>
       <td><span class="stamp ${esc(r.verdict)}">${esc(r.verdict??'—')}${r.rules?' · '+esc(r.rules):''}</span></td>
       <td>${r.filled?money(r.fill_price):'—'}</td>`;
     const open=()=>openRun(r.run_id);
@@ -247,7 +348,21 @@ async function load(){
   }
 }
 
-let chart;
+let chart, allPoints=[], rangeDays=7;
+function applyRange(){
+  let pts=allPoints;
+  if(rangeDays>0){
+    const cutoff=Date.now()-rangeDays*864e5;
+    pts=allPoints.filter(p=>new Date(p.t+'Z').getTime()>=cutoff);
+    if(pts.length<2)pts=allPoints;
+  }
+  drawChart(pts);
+  document.querySelectorAll('.rangebtn').forEach(b=>
+    b.classList.toggle('active', +b.dataset.days===rangeDays));
+}
+document.addEventListener('click',e=>{
+  if(e.target.classList?.contains('rangebtn')){rangeDays=+e.target.dataset.days;applyRange();}
+});
 function drawChart(pts){
   if(chart)chart.destroy();
   chart=new Chart($('#chart'),{type:'line',data:{
@@ -269,12 +384,15 @@ function bar(score){
 
 async function openRun(id){
   const r=await (await fetch('/api/run/'+id)).json();
-  $('#d-title').textContent=id;
+  $('#d-title').textContent=id+(r.strategy&&r.strategy!=='momentum'?`  ·  ${r.strategy.toUpperCase()}`:'');
   let h='';
-  for(const rep of r.reports??[])
+  for(const rep of r.reports??[]){
+    const ev=(rep.evidence??[]).map(e=>`<div class="meta" style="opacity:.8">· ${esc(e)}</div>`).join('');
     h+=`<div class="turn report"><div class="who">${esc(rep.agent)} report</div>
         <p>${esc(rep.summary)}</p>
-        <div class="meta">score ${rep.score>=0?'+':''}${rep.score} ${bar(rep.score)} conf ${rep.confidence}</div></div>`;
+        <div class="meta">score ${rep.score>=0?'+':''}${rep.score} ${bar(rep.score)} conf ${rep.confidence}</div>
+        ${ev}</div>`;
+  }
   if(r.proposal)
     h+=`<div class="turn decision"><div class="who">Decision — ${esc(r.proposal.signal)} ${esc(r.proposal.ticker)}</div>
         <p>${esc(r.proposal.thesis)}</p>
@@ -291,6 +409,8 @@ async function openRun(id){
   if(r.order)
     h+=`<div class="turn report"><div class="who">Execution</div>
         <p>${esc(r.order.status)} ${r.order.fill_price?'@ '+money(r.order.fill_price):''}</p></div>`;
+  for(const n of r.notes??[])
+    h+=`<div class="turn skeptic" style="border-left-style:dashed"><div class="who">pipeline note</div><p>${esc(n)}</p></div>`;
   if(r.portfolio_after)
     h+=`<div class="turn report"><div class="who">Portfolio after</div>
         <p>cash ${money(r.portfolio_after.cash)} · equity ${money(r.portfolio_after.equity)}</p></div>`;
