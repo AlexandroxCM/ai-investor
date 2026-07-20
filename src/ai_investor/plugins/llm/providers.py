@@ -18,7 +18,7 @@ PRESETS = {
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
         # 2.5-flash-lite has the healthiest free quota after Google's Dec 2025 cuts
-        "model": "models/gemma-4-26b-a4b-it",
+        "model": "gemini-2.5-flash-lite",
         "key_env": "GEMINI_API_KEY",
     },
 }
@@ -50,10 +50,18 @@ class OpenAICompatLLM(LLMProvider):
             gap = self.min_interval - (time.monotonic() - self._last_call)
             if gap > 0:
                 time.sleep(gap)
-            resp = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={"Authorization": f"Bearer {self.api_key}"},
-                json=payload, timeout=60)
+            try:
+                resp = requests.post(
+                    f"{self.base_url}/chat/completions",
+                    headers={"Authorization": f"Bearer {self.api_key}"},
+                    json=payload, timeout=60)
+            except requests.exceptions.RequestException as e:
+                # mid-cycle network drop: wait for the connection to come back
+                wait = 2 ** attempt * 10
+                print(f"[llm] connection failed ({type(e).__name__}), waiting "
+                      f"{wait}s (attempt {attempt + 1}/{self.max_retries})")
+                time.sleep(wait)
+                continue
             self._last_call = time.monotonic()
             if resp.status_code == 429:
                 wait = float(resp.headers.get("retry-after", 2 ** attempt * 3))
@@ -64,10 +72,7 @@ class OpenAICompatLLM(LLMProvider):
                 time.sleep(wait + 0.5)
                 continue
             resp.raise_for_status()
-            content = resp.json()["choices"][0]["message"]["content"]
-            if "</thought>" in content:  # some models emit visible reasoning first
-                content = content.split("</thought>", 1)[1]
-            return content.strip()
+            return resp.json()["choices"][0]["message"]["content"]
         raise RuntimeError("LLM rate-limit retries exhausted — try again later "
                            "or lower screener top_n")
 
