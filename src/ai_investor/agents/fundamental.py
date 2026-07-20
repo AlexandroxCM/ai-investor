@@ -55,6 +55,20 @@ class FundamentalAgent(ResearchAgent):
             elif pe < 16:
                 score += 0.10; evidence.append(f"value territory (fPE {pe:.0f})")
 
+        roe = m.get("roe")
+        if roe is not None:
+            if roe >= 0.15:
+                score += 0.15; evidence.append(f"strong ROE {roe:.0%}")
+            elif roe < 0:
+                score -= 0.15; evidence.append(f"negative ROE {roe:.0%}")
+
+        op = m.get("operating_margin")
+        if op is not None:
+            if op >= 0.15:
+                score += 0.10; evidence.append(f"efficient ops (margin {op:.0%})")
+            elif op < 0:
+                score -= 0.15; evidence.append("operating at a loss")
+
         dte = m.get("debt_to_equity")
         if dte is not None and dte > 2.0:
             score -= 0.15; evidence.append(f"heavy debt (D/E {dte:.1f})")

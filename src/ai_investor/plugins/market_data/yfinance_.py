@@ -10,7 +10,19 @@ from ai_investor.core.models import Bar
 
 class YFinanceData(MarketDataProvider):
     def __init__(self):
+        import logging
         import yfinance  # lazy: keeps fakes-only environments dependency-free
+        # yfinance shouts about every straggler ticker; our code already
+        # skips them gracefully, so mute the megaphone
+        logging.getLogger("yfinance").setLevel(logging.CRITICAL)
+        try:  # macOS caps a process at ~256 open files; bulk downloads need more
+            import resource
+            soft, hard = resource.getrlimit(resource.RLIMIT_NOFILE)
+            if soft < 4096:
+                resource.setrlimit(resource.RLIMIT_NOFILE,
+                                   (min(4096, hard if hard > 0 else 4096), hard))
+        except Exception:
+            pass
         self._yf = yfinance
         self._cache: dict[str, object] = {}
 
@@ -35,11 +47,21 @@ class YFinanceData(MarketDataProvider):
 
     def get_bars_bulk(self, tickers: list[str],
                       lookback_days: int) -> dict[str, list]:
-        """One batched download instead of a request per symbol."""
+        """Batched downloads, chunked so very large universes stay reliable."""
+        if len(tickers) > 150:
+            import time as _time
+            out: dict[str, list] = {}
+            for i in range(0, len(tickers), 150):
+                try:
+                    out.update(self.get_bars_bulk(tickers[i:i + 150], lookback_days))
+                except Exception as e:
+                    print(f"[market_data] chunk {i}-{i+150} failed, skipping: {e}")
+                _time.sleep(1.0)  # let sockets/file handles drain between chunks
+            return out
         df = self._yf.download(tickers=" ".join(tickers),
                                period=f"{max(lookback_days, 5)}d", interval="1d",
                                auto_adjust=True, group_by="ticker",
-                               progress=False, threads=True)
+                               progress=False, threads=4)
         out: dict[str, list] = {}
         for t in tickers:
             try:

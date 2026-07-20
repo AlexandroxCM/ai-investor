@@ -13,6 +13,8 @@ FIELDS = {
     "gross_margin": "grossMargins",
     "debt_to_equity": "debtToEquity",   # yfinance reports this in percent
     "free_cash_flow": "freeCashflow",
+    "roe": "returnOnEquity",
+    "operating_margin": "operatingMargins",
 }
 
 

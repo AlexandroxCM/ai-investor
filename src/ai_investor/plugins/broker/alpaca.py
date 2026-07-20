@@ -33,8 +33,23 @@ class AlpacaBroker(Broker):
         self.fill_poll_seconds = fill_poll_seconds
         self.fill_poll_attempts = fill_poll_attempts
 
+    def _request(self, method: str, path: str, retries: int = 5, **kwargs):
+        """Network blips (DNS flaps, wifi drops) get patient retries —
+        a transient error must never kill an autonomous cycle."""
+        for attempt in range(retries):
+            try:
+                r = requests.request(method, f"{self.base_url}{path}",
+                                     headers=self.headers, timeout=20, **kwargs)
+                return r
+            except requests.exceptions.RequestException as e:
+                wait = 2 ** attempt * 5
+                print(f"[alpaca] connection failed ({type(e).__name__}), "
+                      f"waiting {wait}s (attempt {attempt + 1}/{retries})")
+                time.sleep(wait)
+        raise RuntimeError("Alpaca unreachable after retries — check network")
+
     def _get(self, path: str):
-        r = requests.get(f"{self.base_url}{path}", headers=self.headers, timeout=20)
+        r = self._request("GET", path)
         r.raise_for_status()
         return r.json()
 
@@ -46,8 +61,7 @@ class AlpacaBroker(Broker):
                    "time_in_force": "day"}
         if order.client_order_id:
             payload["client_order_id"] = order.client_order_id
-        r = requests.post(f"{self.base_url}/v2/orders", headers=self.headers,
-                          json=payload, timeout=20)
+        r = self._request("POST", "/v2/orders", json=payload)
         if r.status_code == 403:  # insufficient buying power / not allowed
             order.status = OrderStatus.REJECTED
             print(f"[alpaca] order rejected: {r.text[:200]}")

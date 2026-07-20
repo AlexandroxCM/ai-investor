@@ -142,7 +142,8 @@ class FakeFundamentals(FundamentalsProvider):
 
     METRICS = {"forward_pe": 22.0, "price_to_sales": 5.0, "revenue_growth": 0.18,
                "profit_margin": 0.20, "gross_margin": 0.55,
-               "debt_to_equity": 0.6, "free_cash_flow": 5_000_000_000.0}
+               "debt_to_equity": 0.6, "free_cash_flow": 5_000_000_000.0,
+               "roe": 0.22, "operating_margin": 0.25}
 
     def get_metrics(self, ticker: str) -> dict:
         return dict(self.METRICS)

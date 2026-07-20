@@ -14,7 +14,7 @@ from ai_investor.orchestrator.registry import Registry
 ROOT = Path(__file__).parent.parent
 
 
-def wait_for_network(timeout_s: int = 180) -> bool:
+def wait_for_network(timeout_s: int = 600) -> bool:
     """Post-wake, wifi can lag the scheduler by a minute. Wait politely."""
     import socket
     import time
@@ -36,23 +36,29 @@ def pick_universe(reg: Registry) -> tuple[list[str], set[str]]:
     if cfg.get("mode", "watchlist") != "screener":
         return cfg["watchlist"], set()
     from ai_investor.screener.screener import Screener
-    from ai_investor.screener.universe import DEFAULT_UNIVERSE
+    from ai_investor.screener.universe import (DEFAULT_UNIVERSE,
+                                               load_extended_universe)
     sc = cfg.get("screener", {})
+    if sc.get("scan", "core") == "extended":
+        universe = load_extended_universe(reg.settings["run"]["audit_dir"])
+    else:
+        universe = DEFAULT_UNIVERSE
     held = [p.ticker for p in reg.broker.portfolio().positions]
 
     reporters: list[str] = []
     ua = reg.settings.get("news", {}).get("edgar_user_agent", "")
     if "@" in ua:
         from ai_investor.screener.earnings import EarningsRadar
-        reporters = EarningsRadar(ua).todays_reporters(DEFAULT_UNIVERSE)
+        reporters = EarningsRadar(ua).todays_reporters(universe)
         if reporters:
             print(f"Earnings radar: fresh 8-K filers today: {', '.join(reporters)}")
 
-    screener = Screener(reg.market_data, DEFAULT_UNIVERSE,
+    screener = Screener(reg.market_data, universe,
                         top_n=sc.get("top_n", 12),
                         min_price=sc.get("min_price", 5.0),
-                        min_dollar_volume=sc.get("min_dollar_volume", 5_000_000))
-    print(f"Screening {len(DEFAULT_UNIVERSE)} symbols for top {sc.get('top_n', 12)}...")
+                        min_dollar_volume=sc.get("min_dollar_volume", 5_000_000),
+                        trend_gate=True)
+    print(f"Screening {len(universe)} symbols for top {sc.get('top_n', 12)}...")
     picks = screener.top_candidates(always_include=held + reporters)
     print(f"Candidates: {', '.join(picks)}")
     return picks, set(reporters)

@@ -67,8 +67,11 @@ class Pipeline:
         if briefing:
             rec.reports.append(MarketResearchAgent.as_report(briefing, ticker))
 
-        last_price = self.reg.market_data.last_price(ticker)
-        if last_price != last_price or last_price <= 0:  # NaN or degenerate quote
+        try:
+            last_price = self.reg.market_data.last_price(ticker)
+        except Exception:
+            last_price = float("nan")
+        if last_price != last_price or last_price <= 0:  # NaN/missing/degenerate
             rec.proposal = TradeProposal(ticker=ticker, signal=Signal.HOLD,
                                          quantity=0, confidence=0.0,
                                          thesis="no valid price — data source "
@@ -141,7 +144,13 @@ class Pipeline:
             return []
         records = []
         for pos in self.reg.broker.portfolio().positions:
-            price = self.reg.market_data.last_price(pos.ticker)
+            try:
+                price = self.reg.market_data.last_price(pos.ticker)
+            except Exception as e:
+                print(f"[exit-sweep] no price for {pos.ticker}, skipping: {e}")
+                continue
+            if price != price or price <= 0:
+                continue
             change = price / pos.avg_cost - 1
             reason = None
             if stop and change <= -stop:

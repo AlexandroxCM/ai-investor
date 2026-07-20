@@ -29,7 +29,7 @@ def test_order_carries_client_order_id(monkeypatch):
     r.status_code = 200
     r.raise_for_status = MagicMock()
     r.json.return_value = {"id": "o1", "filled_avg_price": "100.0"}
-    with patch.object(mod.requests, "post", return_value=r) as post:
+    with patch.object(mod.requests, "request", return_value=r) as post:
         broker.submit(Order(ticker="AAPL", signal=Signal.BUY, quantity=1,
                             client_order_id="NVDA-abc123"))
     assert post.call_args.kwargs["json"]["client_order_id"] == "NVDA-abc123"

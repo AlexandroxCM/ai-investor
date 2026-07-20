@@ -53,3 +53,15 @@ def test_nan_price_is_guarded_not_traded(tmp_path):
     assert rec.order is None
     assert rec.proposal.signal.value == "hold"
     assert "price guard" in " ".join(rec.notes)
+
+
+def test_raising_price_source_is_guarded(tmp_path):
+    reg = Registry(make_settings(tmp_path))
+
+    def boom(t):
+        raise RuntimeError(f"no price data for {t}")
+    reg.market_data.last_price = boom
+    pipe = Pipeline(reg, make_rules(tmp_path))
+    rec = pipe.run_cycle("NVDA", budget=100)  # must not raise
+    assert rec.order is None
+    assert "price guard" in " ".join(rec.notes)
