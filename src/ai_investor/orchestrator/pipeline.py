@@ -101,7 +101,7 @@ class Pipeline:
                 sustained = []
             if sustained:
                 old = rec.proposal.confidence
-                new = max(0.0, round(old - 0.08 * len(sustained), 3))
+                new = max(0.0, round(old - 0.05 * len(sustained), 3))
                 rec.proposal = rec.proposal.model_copy(update={"confidence": new})
                 rec.notes.append(f"skeptic sustained {sustained}: "
                                  f"confidence {old} -> {new}")
