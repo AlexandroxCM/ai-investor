@@ -100,6 +100,11 @@ class RiskManager:
                 triggered.append("max_open_positions")
 
             cost = proposal.quantity * last_price
+            # existing exposure to THIS ticker (stops endless averaging-up)
+            existing = next((pos.quantity * last_price
+                             for pos in portfolio.positions
+                             if pos.ticker == proposal.ticker), 0.0)
+            cost = cost + existing  # cap checks TOTAL, not just this one order
             max_cost_position = self.rules["max_position_pct"] * portfolio.equity
             max_cost_cash = (portfolio.cash - pending["cash"]
                              - self.rules["min_cash_pct"] * portfolio.equity)

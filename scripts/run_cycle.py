@@ -59,7 +59,11 @@ def pick_universe(reg: Registry) -> tuple[list[str], set[str]]:
                         min_dollar_volume=sc.get("min_dollar_volume", 5_000_000),
                         trend_gate=True)
     print(f"Screening {len(universe)} symbols for top {sc.get('top_n', 12)}...")
-    picks = screener.top_candidates(always_include=held + reporters)
+    # held names are evaluated for exits separately, NOT force-injected as
+    # buy candidates (that caused the same winners to be re-bought daily).
+    picks = screener.top_candidates(always_include=reporters)
+    # append held names at the end so they still get a sell/hold evaluation
+    picks = picks + [t for t in held if t not in picks]
     print(f"Candidates: {', '.join(picks)}")
     return picks, set(reporters)
 
